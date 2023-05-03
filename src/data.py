@@ -10,5 +10,5 @@ class Data_object():
         self.Y0 = Y[T==0]
         self.Y1 = Y[T==1]
 
-    def return_permuted_data(permutation):
-        return Data_object(X,Y,T[permutation])
+    def return_permuted_data(self,permutation):
+        return Data_object(self.X,self.Y,self.T[permutation])
