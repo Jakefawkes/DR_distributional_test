@@ -17,8 +17,8 @@ def binned_permutation(binned_weights):
         perm[ bin_i ] = np.random.choice(perm[ bin_i ], len(perm[ bin_i ]),replace = False)
     return perm
 
-def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=100,reg=1):
-
+def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,reg=1):
+    
     weights_model.fit(data_train.X,data_train.T)
     weights_train = torch.tensor(weights_model.predict_proba(data_train.X)[:,1]).float()
     weights_test = torch.tensor(weights_model.predict_proba(data_test.X)[:,1]).float()
