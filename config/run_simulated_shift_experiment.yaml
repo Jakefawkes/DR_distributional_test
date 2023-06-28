@@ -1,0 +1,61 @@
+################################################################################
+#   CONFIGURATIONS FOR SIMULATED DATA MODEL
+# Run python run_simulated_shift_experiment.py --cfg=config/run_simulated_shift_experiment.yaml --o=sandbox/linear_data --plot 
+################################################################################
+
+# Experiment
+
+experiment:
+  n_iter: 30
+
+  test_stat : [DATE,DETT]
+
+  ker_regress: [cme,zero]
+
+  weights_model : Logistic_Regression
+
+  X_ker: RBF
+
+  Y_ker: RBF
+
+  significance_level : 0.05
+
+  n_bins: 20
+
+  cme_reg: [1.0e-30,1.0e-3,10]
+
+  permute_weights: True
+
+# DATASET
+data:
+  # Name of the generator
+  generator: shift_data_simulation
+
+  n_train_sample: 200
+
+  n_test_sample: 200
+
+  arguments: 
+    mu: [0.1,0.1,0.1,0,0,0]
+    sigma: [C_ID,1.5]
+    noise: 0.2
+  
+  functions:
+    g_0: f_3
+    g_1: f_4
+
+# DATASET
+# data:  
+#     # Name of the generator
+#   generator: linear_data_simulation
+
+#   n_train_sample: 500
+
+#   n_test_sample: 500
+
+#   arguments: 
+#     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
+#     beta_vec: [0.1,0.2,0.3,0.4,0.5]
+#     beta_scalar: 0.3
+#     effect_var: Unif
+#     noise_Y: 0.2
