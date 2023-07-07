@@ -2,6 +2,9 @@ import seaborn as sns
 import pandas as pd
 import torch
 import os 
+from qpth.qp import QPFunction
+from torch.autograd import Variable
+
 
 class ker():
     """Implementation of CME which takes in the required matricies and
@@ -16,9 +19,11 @@ class ker():
             else:
                    return self.k(X1,X2).evaluate() 
             
-def get_W_matrix(K_X,c,func):
+def get_W_matrix(K_X,c,func,weights = None):
+    if weights is None:
+         weights = torch.ones(K_X.shape[0])
     if func == "cme":
-        return torch.cholesky_inverse(K_X + c * K_X.shape[0] * torch.eye(K_X.shape[0]))
+        return torch.cholesky_inverse(K_X + c * K_X.shape[0] * torch.diag(weights))
     if func == "zero":
         return torch.zeros((K_X.shape[0],K_X.shape[0]))
           
@@ -66,3 +71,37 @@ def cme_cross_validate(data_train,data_val,X_ker,Y_ker,reg_param_range):
         index_min = min(range(len(param_list)), key=param_list.__getitem__)
 
         return reg_param_range[index_min]
+
+def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
+    '''
+    An implementation of Kernel Mean Matching, note that this implementation uses its own kernel parameter
+    References:
+    1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." 
+    2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data."
+    
+    :param X1: two dimensional sample from population 1
+    :param X2: two dimensional sample from population 2
+    :param kern: kernel to be used, an instance of class Kernel in kernel_utils
+    :param B: upperbound on the solution search space 
+    :param eps: normalization error
+    :return: weight coefficients for instances x1 such that the distribution of weighted x1 matches x2
+    '''
+    kernel_X = ker(X_ker)
+    n0 = X0.shape[0]
+    n = X1.shape[0]
+    G = torch.concat([torch.ones(1,n0),-torch.ones(1,n0),torch.eye(n0),-torch.eye(n0)])
+    h = torch.concat([torch.tensor([n0 * (1 + eps),n0 * (eps - 1)]), B * torch.ones((n0,)),torch.zeros(n0) ])
+    e = Variable(torch.Tensor())
+    K_mat = kernel_X(X0, X0)
+    kappa = torch.sum(kernel_X(X0, X1), axis=1) * float(n0) / float(n-n0)      
+    
+    coef = QPFunction(verbose=-1)(K_mat, -kappa, G, h, e, e)
+        
+    return coef
+
+def KMM_weights_for_W_matrix(X_ker,X0,X,KMM_weights = False):
+    if KMM_weights:
+        return_weights = kernel_mean_matching(X_ker, X0, X)
+    else: 
+        return_weights = torch.ones(X0.shape[0])
+    return return_weights

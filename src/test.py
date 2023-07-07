@@ -1,7 +1,7 @@
 import torch 
 import gpytorch
 from src.test_statistics import *
-from src.utils import get_W_matrix
+from src.utils import get_W_matrix,KMM_weights_for_W_matrix
 from sklearn.preprocessing import KBinsDiscretizer
 import numpy as np
 
@@ -18,18 +18,25 @@ def binned_permutation(binned_weights):
         perm[ bin_i ] = np.random.choice(perm[ bin_i ], len(perm[ bin_i ]),replace = False)
     return perm
 
-def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,reg=1,permute_weights=False,func="cme"):
+def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,reg=1,permute_weights=False,func="cme", KMM_weights = False):
     
     weights_train = torch.tensor(weights_model.predict_proba(data_train.X)[:,1]).float()
     weights_test = torch.tensor(weights_model.predict_proba(data_test.X)[:,1]).float()
 
     if test_stat == "DATE":
-        W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg,func)
-        W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg,func)
+         
+        W0_weights = KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)
+        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+
+        W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg,func,weights=W0_weights)
+        W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg,func,weights=W1_weights)
+
         base_stat = DATE_test_stat(data_train,data_test,X_ker,Y_ker,weights_test,W0,W1)
     
     elif test_stat == "DETT":
-        W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg,func)
+
+        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg,func,weights=W1_weights)
         base_stat = DETT_test_stat(data_train,data_test,X_ker,Y_ker,weights_test,W1)
 
     binned_weights_train = get_binned_weights(weights_train, n_bins)
@@ -39,11 +46,15 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     permuted_train_data = data_train.return_permuted_data(train_permutation)
     
     if test_stat == "DATE":
-        W0_permuted = get_W_matrix(X_ker(permuted_train_data.X0).evaluate(),reg,func)
-        W1_permuted = get_W_matrix(Y_ker(permuted_train_data.X1).evaluate(),reg,func)
+
+        W0_weights_perm = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X0,permuted_train_data.X,KMM_weights)
+        W1_weights_perm = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
+
+        W0_permuted = get_W_matrix(X_ker(permuted_train_data.X0).evaluate(),reg,func,W0_weights_perm)
+        W1_permuted = get_W_matrix(Y_ker(permuted_train_data.X1).evaluate(),reg,func,W1_weights_perm)
     
     elif test_stat == "DETT":
-        W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg,func)
+        W1_weights = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
         W1_permuted = get_W_matrix(Y_ker(permuted_train_data.X1).evaluate(),reg,func)
 
     permuted_stats = []
