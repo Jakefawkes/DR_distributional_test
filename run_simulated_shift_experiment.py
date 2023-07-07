@@ -40,6 +40,8 @@ def main(args, cfg,direct_path):
     Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]]()
     n_bins = cfg["experiment"]["n_bins"]
     permute_weights = cfg["experiment"]["permute_weights"] 
+    KMM_weights = cfg["experiment"]["KMM_weights"] 
+
     if permute_weights:
         print("Permuting")
     if not permute_weights:
@@ -58,9 +60,10 @@ def main(args, cfg,direct_path):
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
         data_train,data_test = make_data(cfg)
         weights_model.fit(X= data_train.X, y=data_train.T)
+        
         for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
-                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func)
+                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_wei)
                 results_dict[stat+func] = results_dict.get(stat+func,0) + float((result["p_val"] < cfg["experiment"]["significance_level"]))
     for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
