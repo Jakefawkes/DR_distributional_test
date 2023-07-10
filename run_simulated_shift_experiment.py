@@ -91,8 +91,6 @@ def make_data(cfg):
         data_test = data.linear_data_simulation(n_sample=cfg["data"]["n_test_sample"],**cfg["data"]["arguments"])
     return data_train,data_test
 
-def get_confidence_interval(p,n):
-    return [max(p-1.96*((p*(1-p)/n)**(1/2)),0),min(p+1.96*((p*(1-p)/n)**(1/2)),1)]
 
 if __name__ == "__main__":
     # Read input args
