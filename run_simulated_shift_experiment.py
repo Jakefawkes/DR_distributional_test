@@ -63,7 +63,7 @@ def main(args, cfg,direct_path):
         
         for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
-                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_wei)
+                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
                 results_dict[stat+func] = results_dict.get(stat+func,0) + float((result["p_val"] < cfg["experiment"]["significance_level"]))
     for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:

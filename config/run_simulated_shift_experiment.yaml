@@ -14,7 +14,7 @@ experiment:
 
   ker_regress: [cme,zero]
 
-  weights_model : Logistic_Regression
+  weights_model : Linear
 
   X_ker: RBF
 
@@ -51,16 +51,16 @@ data:
 # DATASET
 # data:  
     # Name of the generator
-  generator: linear_data_simulation
+  generator: Logistic_Regression
 
-  n_train_sample: 1000
+  n_train_sample: 500
 
-  n_test_sample: 1000
+  n_test_sample: 500
 
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
     beta_vec: [0.1,0.2,0.3,0.4,0.5]
-    beta_scalar: 0.2
+    beta_scalar: 0
     effect_var: Unif
     noise_Y: 0.2
 

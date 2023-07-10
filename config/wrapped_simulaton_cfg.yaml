@@ -9,16 +9,16 @@ moving_param:
   beta_scalar: True
   n_train_sample: False
   n_test_sample: False
-  values : [0,0.1]
+  values : [0,0.05,0.1,0.15]
 
 experiment:
-  n_iter: 5
+  n_iter: 40
 
   test_stat : [DATE,DETT]
 
   ker_regress: [cme,zero]
 
-  weights_model : Logistic_Regression
+  weights_model : MLP
 
   X_ker: RBF
 
@@ -57,9 +57,9 @@ data:
     # Name of the generator
   generator: linear_data_simulation
 
-  n_train_sample: 100
+  n_train_sample: 500
 
-  n_test_sample: 100
+  n_test_sample: 500
 
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
