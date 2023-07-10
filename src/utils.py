@@ -105,3 +105,6 @@ def KMM_weights_for_W_matrix(X_ker,X0,X,KMM_weights = False):
     else: 
         return_weights = torch.ones(X0.shape[0])
     return return_weights
+
+def get_confidence_interval(p,n):
+    return [max(p-1.96*((p*(1-p)/n)**(1/2)),0),min(p+1.96*((p*(1-p)/n)**(1/2)),1)]

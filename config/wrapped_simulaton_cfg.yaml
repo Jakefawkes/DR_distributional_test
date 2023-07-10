@@ -1,14 +1,18 @@
 ################################################################################
 #   CONFIGURATIONS FOR SIMULATED DATA MODEL
-# Run python run_simulated_shift_experiment.py --cfg=config/run_simulated_shift_experiment.yaml --o=sandbox/linear_data --plot 
+# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/ --plot 
 ################################################################################
 
 # Experiment
 
-
+moving_param:
+  beta_scalar: True
+  n_train_sample: False
+  n_test_sample: False
+  values : [0,0.1]
 
 experiment:
-  n_iter: 30
+  n_iter: 5
 
   test_stat : [DATE,DETT]
 
@@ -31,7 +35,7 @@ experiment:
   KMM_weights: True
 
 # DATASET
-data:
+# data:
   # # Name of the generator
   # generator: shift_data_simulation
 
@@ -49,13 +53,13 @@ data:
   #   g_1: f_4
 
 # DATASET
-# data:  
+data:  
     # Name of the generator
   generator: linear_data_simulation
 
-  n_train_sample: 1000
+  n_train_sample: 100
 
-  n_test_sample: 1000
+  n_test_sample: 100
 
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
