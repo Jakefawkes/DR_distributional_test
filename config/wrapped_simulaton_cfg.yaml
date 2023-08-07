@@ -1,20 +1,22 @@
 ################################################################################
 #   CONFIGURATIONS FOR SIMULATED DATA MODEL
-# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/ --plot 
+# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/
 ################################################################################
 
 # Experiment
 
 moving_param:
-  beta_scalar: True
-  n_train_sample: False
-  n_test_sample: False
-  values : [0,0.05,0.1,0.15]
+  beta_scalar: False
+  n_train_sample: True
+  n_test_sample: True
+  values : [100,150]
 
 experiment:
-  n_iter: 40
+  n_iter: 2
 
   test_stat : [DATE,DETT]
+
+  comparison_model : [TMLE,DML]
 
   ker_regress: [cme,zero]
 
@@ -28,7 +30,7 @@ experiment:
 
   n_bins: 20
 
-  cme_reg: 0.01
+  cme_reg: [0.01,0.1,5]
 
   permute_weights: True
   
@@ -36,30 +38,30 @@ experiment:
 
 # DATASET
 # data:
-  # # Name of the generator
-  # generator: shift_data_simulation
+#   # Name of the generator
+#   generator: shift_data_simulation
 
-  # n_train_sample: 200
+#   n_train_sample: 200
 
-  # n_test_sample: 200
+#   n_test_sample: 200
 
-  # arguments: 
-  #   mu: [0.1,0.1,0.1,0,0,0]
-  #   sigma: [C_ID,1.5]
-  #   noise: 0.2
+#   arguments: 
+#     mu: [0.1,0.1,0.1]
+#     sigma: [C_ID,1.5]
+#     noise: 0.2
   
-  # functions:
-  #   g_0: f_3
-  #   g_1: f_4
+#   functions:
+#     g_0: f_0
+#     g_1: f_0
 
 # DATASET
 data:  
     # Name of the generator
   generator: linear_data_simulation
 
-  n_train_sample: 500
+  n_train_sample: 50
 
-  n_test_sample: 500
+  n_test_sample: 50
 
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]

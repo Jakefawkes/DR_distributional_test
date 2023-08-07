@@ -4,7 +4,7 @@ import torch
 import os 
 from qpth.qp import QPFunction
 from torch.autograd import Variable
-
+import numpy as np
 
 class ker():
     """Implementation of CME which takes in the required matricies and
@@ -99,12 +99,100 @@ def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
         
     return coef
 
+# def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
+#     '''
+#     An implementation of Kernel Mean Matching, note that this implementation uses its own kernel parameter
+#     References:
+#     1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." 
+#     2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data."
+    
+#     :param X1: two dimensional sample from population 1
+#     :param X2: two dimensional sample from population 2
+#     :param kern: kernel to be used, an instance of class Kernel in kernel_utils
+#     :param B: upperbound on the solution search space 
+#     :param eps: normalization error
+#     :return: weight coefficients for instances x1 such that the distribution of weighted x1 matches x2
+#     '''
+#     KMM_model = KMM()
+#     coef = KMM_model.fit_weights(np.array(X0,dtype=np.double),np.array(X1,dtype=np.double)) 
+#     coef = torch.tensor(coef,dtype=torch.float64)
+#     return coef
+
 def KMM_weights_for_W_matrix(X_ker,X0,X,KMM_weights = False):
     if KMM_weights:
-        return_weights = kernel_mean_matching(X_ker, X0, X)
+        return_weights = kernel_mean_matching(X_ker, X0, X).squeeze(0)
     else: 
         return_weights = torch.ones(X0.shape[0])
     return return_weights
 
 def get_confidence_interval(p,n):
     return [max(p-1.96*((p*(1-p)/n)**(1/2)),0),min(p+1.96*((p*(1-p)/n)**(1/2)),1)]
+
+def cme_cross_validate_target_weighted(data_train,data_val,X_ker,Y_ker,reg_param,T_val=0):
+        
+        K = ker(X_ker)
+        L = ker(Y_ker)
+
+        X_train_data = data_train.X[data_train.T == T_val]
+        Y_train_data = data_train.Y[data_train.T == T_val]
+
+        W = get_W_matrix(X_ker(X_train_data).evaluate(),reg_param,"cme")
+
+        X_val_data = data_val.X[data_val.T == T_val]
+        Y_val_data = data_val.Y[data_val.T == T_val]
+
+        return_weights = kernel_mean_matching(X_ker, X_val_data, data_val.X).squeeze(0)
+        return_weights_matrix = torch.diag(return_weights)
+
+        val_stat = torch.trace(return_weights_matrix@(L(Y_val_data,Y_val_data) -2 * K(X_train_data,X_val_data).T @ (W @ (L(Y_train_data,Y_val_data))) + (K(X_train_data,X_val_data).T @ (W @ (L(Y_train_data,Y_train_data)@ (W @ (K(X_train_data,X_val_data))))))))
+        
+        return val_stat
+
+def cme_cross_validate_weighted(data_train,data_val,X_ker,Y_ker,reg_param_range,T_val=0):
+        
+        K = ker(X_ker)
+        L = ker(Y_ker)
+
+        param_list = []
+
+        for reg_param in reg_param_range:
+              param_list.append(cme_cross_validate_target_weighted(data_train,data_val,X_ker,Y_ker,reg_param,T_val=T_val))
+        print(dict(zip(reg_param_range,param_list)))
+        index_min = min(range(len(param_list)), key=param_list.__getitem__)
+
+        return reg_param_range[index_min]
+
+def sq_dist(x1,x2):
+    adjustment = x1.mean(-2, keepdim=True)
+    x1 = x1 - adjustment
+    x2 = x2 - adjustment  # x1 and x2 should be identical in all dims except -2 at this point
+
+    # Compute squared distance matrix using quadratic expansion
+    x1_norm = x1.pow(2).sum(dim=-1, keepdim=True)
+    x1_pad = torch.ones_like(x1_norm)
+    x2_norm = x2.pow(2).sum(dim=-1, keepdim=True)
+    x2_pad = torch.ones_like(x2_norm)
+    x1_ = torch.cat([-2.0 * x1, x1_norm, x1_pad], dim=-1)
+    x2_ = torch.cat([x2, x2_pad, x2_norm], dim=-1)
+    res = x1_.matmul(x2_.transpose(-2, -1))
+    # Zero out negative values
+    res.clamp_min_(0)
+
+    # res  = torch.cdist(x1,x2,p=2)
+    # Zero out negative values
+    # res.clamp_min_(0)
+    return res
+
+def covar_dist(x1, x2):
+    return sq_dist(x1,x2).sqrt()
+
+def get_median_ls(X,Y=None):
+    with torch.no_grad():
+        if Y is None:
+            d = covar_dist(x1=X, x2=X)
+        else:
+            d = covar_dist(x1=X, x2=Y)
+        ret = torch.sqrt(torch.median(d[d >= 0])) # print this value, should be increasing with d
+        if ret.item()==0:
+            ret = torch.tensor(1.0)
+        return ret

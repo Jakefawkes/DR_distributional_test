@@ -25,12 +25,25 @@ class Data_object():
         df["T"] = self.T
         return sns.pairplot(df, hue="T")
     
+    def pd_df(self):
+        df = pd.DataFrame(np.array(self.X))
+        df.columns = ["X"+str(i) for i in df.columns]
+        df["Y"] = self.Y
+        df["T"] = self.T
+        return df
+    
     def save_data_plot(self,path,name="data_plot"):
         plot = self.plot_data()
         save_path = os.path.join(path,name)
         plot.savefig(save_path)
         plot.figure.clf()
         return None
+    
+    def join(self,data_object):
+        X_join = torch.concat([data_object.X,self.X])
+        Y_join = torch.concat([data_object.Y,self.Y])
+        T_join = torch.concat([data_object.T,self.T])
+        return Data_object(X_join,Y_join,T_join)
 
     
 def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample):
