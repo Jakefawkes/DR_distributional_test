@@ -63,6 +63,9 @@ data:
 
   n_test_sample: 50
 
+  dx: 5
+  dy: 1 
+  
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
     beta_vec: [0.1,0.2,0.3,0.4,0.5]

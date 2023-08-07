@@ -5,6 +5,8 @@ import os
 from qpth.qp import QPFunction
 from torch.autograd import Variable
 import numpy as np
+from sklearn.metrics import pairwise_distances
+
 
 class ker():
     """Implementation of CME which takes in the required matricies and
@@ -162,37 +164,12 @@ def cme_cross_validate_weighted(data_train,data_val,X_ker,Y_ker,reg_param_range,
 
         return reg_param_range[index_min]
 
-def sq_dist(x1,x2):
-    adjustment = x1.mean(-2, keepdim=True)
-    x1 = x1 - adjustment
-    x2 = x2 - adjustment  # x1 and x2 should be identical in all dims except -2 at this point
-
-    # Compute squared distance matrix using quadratic expansion
-    x1_norm = x1.pow(2).sum(dim=-1, keepdim=True)
-    x1_pad = torch.ones_like(x1_norm)
-    x2_norm = x2.pow(2).sum(dim=-1, keepdim=True)
-    x2_pad = torch.ones_like(x2_norm)
-    x1_ = torch.cat([-2.0 * x1, x1_norm, x1_pad], dim=-1)
-    x2_ = torch.cat([x2, x2_pad, x2_norm], dim=-1)
-    res = x1_.matmul(x2_.transpose(-2, -1))
-    # Zero out negative values
-    res.clamp_min_(0)
-
-    # res  = torch.cdist(x1,x2,p=2)
-    # Zero out negative values
-    # res.clamp_min_(0)
-    return res
-
-def covar_dist(x1, x2):
-    return sq_dist(x1,x2).sqrt()
-
-def get_median_ls(X,Y=None):
-    with torch.no_grad():
-        if Y is None:
-            d = covar_dist(x1=X, x2=X)
-        else:
-            d = covar_dist(x1=X, x2=Y)
-        ret = torch.sqrt(torch.median(d[d >= 0])) # print this value, should be increasing with d
-        if ret.item()==0:
-            ret = torch.tensor(1.0)
-        return ret
+def compute_median_heuristic(X):
+    if len(X.shape) > 1:
+        median_heuristic = [np.median(pairwise_distances(X[:, [i]].reshape(-1,1))) for i in range(X.shape[1])]
+    else:
+        X = X.unsqueeze(0)
+        median_heuristic = [np.median(pairwise_distances(X[:, [i]].reshape(-1,1))) for i in range(X.shape[1])]
+        median_heuristic = median_heuristic[0]
+        X =X.squeeze(0)
+    return torch.tensor(median_heuristic)

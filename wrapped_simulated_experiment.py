@@ -52,8 +52,8 @@ def main(args, cfg,result_dict):
 
     weights_model = weights_model_dict[cfg["experiment"]["weights_model"]]
 
-    X_ker = kernel_dict[cfg["experiment"]["X_ker"]]()
-    Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]]()
+    X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims=cfg["data"]["dx"])
+    Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]](ard_num_dims=cfg["data"]["dy"])
     n_bins = cfg["experiment"]["n_bins"]
     permute_weights = cfg["experiment"]["permute_weights"] 
     KMM_weights = cfg["experiment"]["KMM_weights"] 
@@ -66,8 +66,8 @@ def main(args, cfg,result_dict):
 
     data_train,data_val = make_data(cfg)
     data_full = data_train.join(data_val)
-    X_ker.lengthscale = get_median_ls(data_full.X)
-    Y_ker.lengthscale = get_median_ls(data_full.Y)
+    X_ker.lengthscale = compute_median_heuristic(data_full.X)
+    Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
     if type(cme_reg) is list:
         cross_val = True
         reg_param_range = np.linspace(cme_reg[0],cme_reg[1],num=cme_reg[2])  
