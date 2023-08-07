@@ -168,8 +168,5 @@ def compute_median_heuristic(X):
     if len(X.shape) > 1:
         median_heuristic = [np.median(pairwise_distances(X[:, [i]].reshape(-1,1))) for i in range(X.shape[1])]
     else:
-        X = X.unsqueeze(0)
-        median_heuristic = [np.median(pairwise_distances(X[:, [i]].reshape(-1,1))) for i in range(X.shape[1])]
-        median_heuristic = median_heuristic[0]
-        X =X.squeeze(0)
+        median_heuristic = np.median(pairwise_distances(X.reshape(-1,1)))
     return torch.tensor(median_heuristic)
