@@ -24,6 +24,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import mean_squared_error
 import numpy as np
 from datetime import datetime
 from src.utils import *
@@ -41,7 +42,10 @@ def main(args, cfg,direct_path):
     n_bins = cfg["experiment"]["n_bins"]
     permute_weights = cfg["experiment"]["permute_weights"] 
     KMM_weights = cfg["experiment"]["KMM_weights"] 
-
+    add_weights_fit = cfg["experiment"]["add_weights_fit"]
+    p_val_list = cfg["experiment"]["p_val_list"]
+    if p_val_list:
+        results_dict["p_values"] = {}
     if permute_weights:
         print("Permuting")
     if not permute_weights:
@@ -65,10 +69,18 @@ def main(args, cfg,direct_path):
             for func in cfg["experiment"]["ker_regress"]:
                 result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
                 results_dict[stat+func] = results_dict.get(stat+func,0) + float((result["p_val"] < cfg["experiment"]["significance_level"]))
+                if p_val_list:
+                    results_dict["p_values"][stat+func] = results_dict["p_values"].get(stat+func,[]) + [result["p_val"]]
+        if add_weights_fit:
+            results_dict["weights_fit"] =results_dict.get("weights_fit",0) + mean_squared_error(torch.tensor(weights_model.predict_proba(data_test.X)[:,1]).float(),data_test.T)
+
     for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
                 results_dict[stat+func] = results_dict[stat+func]/cfg["experiment"]["n_iter"]
                 results_dict[stat+func+"CI"] = get_confidence_interval(results_dict[stat+func],cfg["experiment"]["n_iter"])
+    if add_weights_fit:
+        results_dict["weights_fit"] = results_dict["weights_fit"]/cfg["experiment"]["n_iter"]
+        results_dict["weights_fit"] = results_dict["weights_fit"].item()
     # Dump scores
     if cross_val:
         results_dict["cme_reg"] = cme_reg.item()

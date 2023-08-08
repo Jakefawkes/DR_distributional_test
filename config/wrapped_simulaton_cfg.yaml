@@ -6,13 +6,13 @@
 # Experiment
 
 moving_param:
-  beta_scalar: False
-  n_train_sample: True
-  n_test_sample: True
-  values : [100,150]
+  beta_scalar: True
+  n_train_sample: False
+  n_test_sample: False
+  values : [0,0.2,0.4,0.6,0.8,1]
 
 experiment:
-  n_iter: 2
+  n_iter: 80
 
   test_stat : [DATE,DETT]
 
@@ -30,7 +30,7 @@ experiment:
 
   n_bins: 20
 
-  cme_reg: [0.01,0.1,5]
+  cme_reg: [0.0001,0.1,20]
 
   permute_weights: True
   
@@ -59,13 +59,13 @@ data:
     # Name of the generator
   generator: linear_data_simulation
 
-  n_train_sample: 50
+  n_train_sample: 500
 
-  n_test_sample: 50
-
-  dx: 5
-  dy: 1 
+  n_test_sample: 500
   
+  dx: 5
+  
+  dy: 1
   arguments: 
     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
     beta_vec: [0.1,0.2,0.3,0.4,0.5]
