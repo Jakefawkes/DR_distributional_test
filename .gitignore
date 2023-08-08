@@ -1,7 +1,7 @@
 sandbox
 DR_env
-.gitignore
 job_runner.sh
 config
 config/wrapped_simulaton_cfg.yaml
 config/wrapped_simulaton_cfg.yaml
+.gitignore

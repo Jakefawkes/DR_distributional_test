@@ -97,6 +97,7 @@ def main(args, cfg,result_dict):
         for model in cfg["experiment"]["comparison_model"]:
             result = comparison_model_dict[model](data_full)
             result_dict["test_stat"] += [model]
+            result_dict["result"] += [int(result["p_val"].item()<0.05)]
             result_dict["p_val"] += [result.item()]
             if cfg["moving_param"]["beta_scalar"]:
                 result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
