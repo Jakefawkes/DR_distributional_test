@@ -135,6 +135,7 @@ if __name__ == "__main__":
 
     now = datetime.now()
     date_time_str = now.strftime("%m-%d %H:%M:%S")
+    date_time_str = date_time_str.replace(" ","-")
     result_dict = {"test_stat":[], "p_val":[],"result":[]}
 
     if cfg["moving_param"]["beta_scalar"]:
