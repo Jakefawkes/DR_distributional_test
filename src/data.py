@@ -75,7 +75,7 @@ def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_s
     X = torch.randn((n_sample,d)).float()
     T = torch.bernoulli(torch.sigmoid( X @ alpha_vec ))
     
-    if effect_var == "const":
+    if effect_var == "Const":
         effect_vec = torch.ones(n_sample)
 
     if effect_var == "Ber":

@@ -44,7 +44,7 @@ def construct_dir_name(cfg, value):
     if cfg["moving_param"]["n_train_sample"]:
         return "n_sample="+str(value)
     
-weights_model_dict = {"Logistic_Regression": LogisticRegression(), "Adaboost":AdaBoostClassifier(),"Decision_Tree":DecisionTreeClassifier(),"GP":GaussianProcessClassifier(),"MLP":MLPClassifier()}
+weights_model_dict = {"LR": LogisticRegression(), "Adaboost":AdaBoostClassifier(),"Decision_Tree":DecisionTreeClassifier(),"GP":GaussianProcessClassifier(),"MLP":MLPClassifier()}
 kernel_dict = {"RBF" : kernel.RBFKernel}
 comparison_model_dict = {"DML":double_ml_test , "TMLE":tmle_test}
 
@@ -97,8 +97,8 @@ def main(args, cfg,result_dict):
         for model in cfg["experiment"]["comparison_model"]:
             result = comparison_model_dict[model](data_full)
             result_dict["test_stat"] += [model]
-            result_dict["result"] += [int(result["p_val"].item()<0.05)]
             result_dict["p_val"] += [result.item()]
+            result_dict["result"] += [int(result.item()<0.05)]
             if cfg["moving_param"]["beta_scalar"]:
                 result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
             if cfg["moving_param"]["n_train_sample"]:

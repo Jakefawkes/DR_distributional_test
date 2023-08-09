@@ -2,6 +2,7 @@ import doubleml as dml
 from sklearn.base import clone
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LassoCV
+from sklearn.linear_model import LogisticRegression
 from src.data import *
 from zepid.causal.doublyrobust import TMLE
 import statsmodels.api as sm
@@ -10,20 +11,24 @@ from zepid.causal.doublyrobust.utils import tmle_unit_unbound
 from zepid.calc import probability_to_odds
 
 def double_ml_test(test_data):
+    
     df = test_data.pd_df()
     X_cols = [col for col in df.columns if col.startswith("X")]
     dml_data = dml.DoubleMLData(df,y_col="Y",d_cols="T",x_cols = X_cols)
+    
     learner = RandomForestRegressor(n_estimators = 500, max_features = 'sqrt', max_depth= 5)
 
     ml_l_bonus = clone(learner)
 
-    ml_m_bonus = clone(learner)
+    ml_m_bonus = LogisticRegression()
 
-    learner = LassoCV()
+    # ml_m_bonus = clone(learner)
 
-    ml_l_sim = clone(learner)
+    # learner = LassoCV()
 
-    ml_m_sim = clone(learner)
+    # ml_l_sim = clone(learner)
+
+    # ml_m_sim = clone(learner)
     obj_dml_plr_bonus = dml.DoubleMLPLR(dml_data, ml_l_bonus, ml_m_bonus)
     obj_dml_plr_bonus.fit()
     return obj_dml_plr_bonus.pval
