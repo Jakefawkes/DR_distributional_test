@@ -24,8 +24,8 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
 
     if test_stat == "DATE":
         
-        W0_weights = KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)
-        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W0_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
 
         W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg[0],func,weights=W0_weights)
         W1 = get_W_matrix(X_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
@@ -34,7 +34,7 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     
     elif test_stat == "DETT":
 
-        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
         W1 = get_W_matrix(X_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
         base_stat = DETT_test_stat(data_train,data_test,X_ker,Y_ker,weights_test,W1)
 
@@ -46,14 +46,14 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     
     if test_stat == "DATE":
 
-        W0_weights_perm = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X0,permuted_train_data.X,KMM_weights)
-        W1_weights_perm = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
+        W0_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X0,permuted_train_data.X,KMM_weights)
+        W1_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
 
         W0_permuted = get_W_matrix(X_ker(permuted_train_data.X0).evaluate(),reg[0],func,W0_weights_perm)
         W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func,W1_weights_perm)
     
     elif test_stat == "DETT":
-        W1_weights = KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
         W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func)
 
     permuted_stats = []
@@ -82,8 +82,8 @@ def kernel_permutation_test_sample_split(data_train,data_test,X_ker,Y_ker,weight
 
     if test_stat == "DATE":
          
-        W0_weights = KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)
-        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W0_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
 
         W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg[0],func,weights=W0_weights)
         W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
@@ -92,7 +92,7 @@ def kernel_permutation_test_sample_split(data_train,data_test,X_ker,Y_ker,weight
     
     elif test_stat == "DETT":
 
-        W1_weights = KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
         W1 = get_W_matrix(Y_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
         base_stat = DETT_test_stat(data_train,data_test,X_ker,Y_ker,weights_test,W1)
 
