@@ -34,7 +34,7 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     
     elif test_stat == "DETT":
 
-        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)
+        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X0,KMM_weights)
         W1 = get_W_matrix(X_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
         base_stat = DETT_test_stat(data_train,data_test,X_ker,Y_ker,weights_test,W1)
 

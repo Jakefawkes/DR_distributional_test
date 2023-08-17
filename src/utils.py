@@ -25,7 +25,7 @@ def get_W_matrix(K_X,c,func,weights = None):
     if weights is None:
          weights = torch.ones(K_X.shape[0])
     if func == "cme":
-        return torch.cholesky_inverse(K_X + c * K_X.shape[0] * torch.diag(weights))
+        return torch.cholesky_inverse(K_X + c * 1/K_X.shape[0] * torch.diag(weights))
     if func == "zero":
         return torch.zeros((K_X.shape[0],K_X.shape[0]))
           
