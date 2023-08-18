@@ -9,6 +9,7 @@ import statsmodels.api as sm
 from scipy.stats import logistic, norm
 from zepid.causal.doublyrobust.utils import tmle_unit_unbound
 from zepid.calc import probability_to_odds
+from sklearn.neural_network import MLPClassifier
 
 def double_ml_test(test_data):
     
@@ -20,7 +21,7 @@ def double_ml_test(test_data):
 
     ml_l_bonus = clone(learner)
 
-    ml_m_bonus = LogisticRegression()
+    ml_m_bonus = MLPClassifier()
 
     # ml_m_bonus = clone(learner)
 

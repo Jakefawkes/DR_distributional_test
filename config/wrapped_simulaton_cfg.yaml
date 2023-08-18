@@ -6,13 +6,13 @@
 # Experiment
 
 moving_param:
-  beta_scalar: False
-  n_train_sample: True
-  n_test_sample: True
-  values : [500,1000,1500]
+  beta_scalar: True
+  n_train_sample: False
+  n_test_sample: False
+  values : [0,0.4,1,1.6,2]
 
 experiment:
-  n_iter: 84
+  n_iter: 50
 
   test_stat : [DATE,DETT]
 
@@ -20,7 +20,7 @@ experiment:
 
   ker_regress: [cme,zero]
 
-  weights_model : LR
+  weights_model : MLP
 
   X_ker: RBF
 
@@ -30,50 +30,50 @@ experiment:
 
   n_bins: 40
 
-  cme_reg: [0.000000001,0.0001,20]
+  cme_reg: [0.001,1,20]
 
   permute_weights: True
   
-  KMM_weights: False
+  KMM_weights: True
 
 # DATASET
-data:
-  # Name of the generator
-  generator: shift_data_simulation
+# data:
+#   # Name of the generator
+#   generator: shift_data_simulation
   
-  dx: 10
+#   dx: 10
   
-  dy: 1
-
-  n_train_sample: 500
-
-  n_test_sample: 500
-
-  arguments: 
-    mu: [0,0,0,0,0,0,0,0,0,0]
-    sigma: [C_ID,1.5]
-    noise: 0.2
-  
-  functions:
-    g_0: f_0
-    g_1: f_1
-
-# DATASET
-# data:  
-#     # Name of the generator
-#   generator: linear_data_simulation
+#   dy: 1
 
 #   n_train_sample: 500
 
 #   n_test_sample: 500
-  
-#   dx: 5
-  
-#   dy: 1
+
 #   arguments: 
-#     alpha_vec: [0.1,0.2,0.3,0.4,0.5]
-#     beta_vec: [0.1,0.2,0.3,0.4,0.5]
-#     beta_scalar: 0.2
-#     effect_var: Const
-#     noise_Y: 0.2
+#     mu: [0,0,0,0,0,0,0,0,0,0]
+#     sigma: [C_ID,1.5]
+#     noise: 0.2
+  
+#   functions:
+#     g_0: f_0
+#     g_1: f_1
+
+# DATASET
+data:  
+    # Name of the generator
+  generator: linear_data_simulation
+
+  n_train_sample: 1000
+
+  n_test_sample: 1000
+  
+  dx: 9
+  
+  dy: 1
+  arguments: 
+    alpha_vec: [0.1,0.2,0.3,0.4,0.5,0.1,0.2,0.3,0.4]
+    beta_vec: [0.1,0.2,0.3,0.4,0.5,0.1,0.2,0.3,0.4]
+    beta_scalar: 0
+    effect_var: Ber
+    noise_Y: 0.2
 
