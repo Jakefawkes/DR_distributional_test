@@ -45,8 +45,12 @@ class Data_object():
         T_join = torch.concat([data_object.T,self.T])
         return Data_object(X_join,Y_join,T_join)
 
+    def flip_T(self):
+        self.T = 1-self.T
+        self.X0,self.X1 = self.X0,self.X1
+        self.Y0,self.Y1 = self.Y1,self.Y0
     
-def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample):
+def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False):
 
     mu = torch.tensor(mu)
     d = len(mu)
@@ -56,16 +60,18 @@ def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample):
 
     X0 = torch.randn((math.floor(n_sample/2),d))
     X1 = torch.randn((math.ceil(n_sample/2),d)) @ covar.T + mu
-
-    Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
-    Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
-
+    if counterfactual:
+        Y1 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
+        Y0 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
+    else:
+        Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
+        Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
     X = torch.concat([X0,X1])
     Y = torch.concat([Y0,Y1])
 
     return Data_object(X,Y,T)
 
-def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_sample):
+def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_sample,counterfactual=False):
 
     alpha_vec = torch.tensor(alpha_vec).float()
     beta_vec = torch.tensor(beta_vec).float()
@@ -84,8 +90,11 @@ def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_s
     if effect_var == "Unif":
         effect_vec = 2*torch.rand(n_sample)-1
 
-    Y =  X @ alpha_vec + beta_scalar * (effect_vec*T) + noise_Y * torch.randn((n_sample))
-
+    if counterfactual:
+        Y =  X @ alpha_vec + beta_scalar * (effect_vec*(1-T)) + noise_Y * torch.randn((n_sample))
+    else:
+        Y =  X @ alpha_vec + beta_scalar * (effect_vec*(1-T)) + noise_Y * torch.randn((n_sample))
+    
     return Data_object(X,Y,T)
 
 f_0 = lambda X: X[:,0]**2 + X[:,1] 

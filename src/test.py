@@ -75,6 +75,33 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
 
     return {"p_val": p_val,"stat": base_stat ,"permuted_stats": permuted_stats}
 
+def goodness_of_fit_test(fit_samples,data_train,data_test,X_ker,Y_ker,weights_model,t=1,test_stat="DATE",reg=1,func="cme", KMM_weights = False):
+    
+    weights = torch.tensor(weights_model.predict_proba(data_test.X)[:,1]).float()
+
+    if test_stat == "DATE":
+        
+        if t==1:
+            W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X,KMM_weights)            
+            W1 = get_W_matrix(X_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
+            fit_stat = DATE_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,W1,t=1)
+        else:    
+            W0_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X,KMM_weights)            
+            W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg[0],func,weights=W0_weights)
+            fit_stat = DATE_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,W0,t=0)
+    
+    elif test_stat == "DETT":
+        if t==1:
+            W1_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X1,data_train.X0,KMM_weights)
+            W1 = get_W_matrix(X_ker(data_train.X1).evaluate(),reg[1],func,weights=W1_weights)
+            fit_stat = DETT_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,W1,t=1)
+        else:    
+            W0_weights = 1/KMM_weights_for_W_matrix(X_ker,data_train.X0,data_train.X1,KMM_weights)            
+            W0 = get_W_matrix(X_ker(data_train.X0).evaluate(),reg[0],func,weights=W0_weights)
+            fit_stat = DETT_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,W0,t=0)
+
+    return fit_stat
+
 def kernel_permutation_test_sample_split(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,reg=1,permute_weights=False,func="cme", KMM_weights = False):
     
     weights_train = torch.tensor(weights_model.predict_proba(data_train.X)[:,1]).float()
