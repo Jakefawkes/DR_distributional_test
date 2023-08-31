@@ -7,7 +7,7 @@ from torch.autograd import Variable
 import numpy as np
 from sklearn.metrics import pairwise_distances
 import math
-
+from cvxopt import matrix, solvers
 class ker():
     """Implementation of CME which takes in the required matricies and
     kernel as input """
@@ -124,7 +124,7 @@ def kernel_mean_matching(X_ker, Z, X , eps=1, B=100 ):
     h = matrix(np.r_[nz*(1+eps), nz*(eps-1), B*np.ones((nz,)), np.zeros((nz,))])
     
     sol = solvers.qp(K, -kappa, G, h)
-    coef = torch.tensor(sol['x'])
+    coef = torch.tensor(np.array(sol['x']),dtype=torch.float)
     return coef
 
 def KMM_weights_for_W_matrix(X_ker,X0,X,KMM_weights = False):
