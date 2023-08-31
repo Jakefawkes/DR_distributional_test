@@ -2,11 +2,11 @@ import seaborn as sns
 import pandas as pd
 import torch
 import os 
-from qpth.qp import QPFunction
+from qpth.qp import QPFunction,QPSolvers
 from torch.autograd import Variable
 import numpy as np
 from sklearn.metrics import pairwise_distances
-
+import math
 
 class ker():
     """Implementation of CME which takes in the required matricies and
@@ -74,34 +74,7 @@ def cme_cross_validate(data_train,data_val,X_ker,Y_ker,reg_param_range):
 
         return reg_param_range[index_min]
 
-def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
-    '''
-    An implementation of Kernel Mean Matching, note that this implementation uses its own kernel parameter
-    References:
-    1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." 
-    2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data."
-    
-    :param X1: two dimensional sample from population 1
-    :param X2: two dimensional sample from population 2
-    :param kern: kernel to be used, an instance of class Kernel in kernel_utils
-    :param B: upperbound on the solution search space 
-    :param eps: normalization error
-    :return: weight coefficients for instances x1 such that the distribution of weighted x1 matches x2
-    '''
-    kernel_X = ker(X_ker)
-    n0 = X0.shape[0]
-    n = X1.shape[0]
-    G = torch.concat([torch.ones(1,n0),-torch.ones(1,n0),torch.eye(n0),-torch.eye(n0)])
-    h = torch.concat([torch.tensor([n0 * (1 + eps),n0 * (eps - 1)]), B * torch.ones((n0,)),torch.zeros(n0) ])
-    e = Variable(torch.Tensor())
-    K_mat = kernel_X(X0, X0)
-    kappa = torch.sum(kernel_X(X0, X1), axis=1) * float(n0) / float(n-n0)      
-    
-    coef = QPFunction(verbose=-1)(K_mat, -kappa, G, h, e, e)
-        
-    return coef
-
-# def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
+# def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=100 ):
 #     '''
 #     An implementation of Kernel Mean Matching, note that this implementation uses its own kernel parameter
 #     References:
@@ -115,10 +88,44 @@ def kernel_mean_matching(X_ker, X0, X1 , eps=1, B=10 ):
 #     :param eps: normalization error
 #     :return: weight coefficients for instances x1 such that the distribution of weighted x1 matches x2
 #     '''
-#     KMM_model = KMM()
-#     coef = KMM_model.fit_weights(np.array(X0,dtype=np.double),np.array(X1,dtype=np.double)) 
-#     coef = torch.tensor(coef,dtype=torch.float64)
+    
+#     kernel_X = ker(X_ker)
+#     n0 = X0.shape[0]
+#     n = X1.shape[0]
+#     eps = eps * B / (n0**(-1/2))
+#     G = torch.concat([torch.ones(1,n0),-torch.ones(1,n0),torch.eye(n0),-torch.eye(n0)])
+#     h = torch.concat([torch.tensor([n0 * (1 + eps),n0 * (eps - 1)]), B * torch.ones((n0,)),torch.zeros(n0) ])
+#     e = Variable(torch.Tensor())
+#     K_mat = kernel_X(X0, X0)
+#     kappa = torch.sum(kernel_X(X0, X1), axis=1) * float(n0) / float(n)      
+    
+#     coef = QPFunction(verbose=-1,solver= QPSolvers.CVXPY)(K_mat, -kappa, G, h, e, e)
+        
 #     return coef
+
+def kernel_mean_matching(X_ker, Z, X , eps=1, B=100 ):
+    
+    kernel_X = ker(X_ker)
+    nx = X.shape[0]
+    nz = Z.shape[0]
+
+    if eps == None:
+        eps = B/math.sqrt(nz)
+    
+    else:
+        eps = eps * B/math.sqrt(nz)
+    
+    K = np.array(kernel_X(Z, Z).detach(),dtype=np.double)
+    kappa = np.sum(np.array(kernel_X(Z, X).detach(),dtype=np.double)*float(nz)/float(nx),axis=1)
+
+    K = matrix(K)
+    kappa = matrix(kappa)
+    G = matrix(np.r_[np.ones((1,nz)), -np.ones((1,nz)), np.eye(nz), -np.eye(nz)])
+    h = matrix(np.r_[nz*(1+eps), nz*(eps-1), B*np.ones((nz,)), np.zeros((nz,))])
+    
+    sol = solvers.qp(K, -kappa, G, h)
+    coef = torch.tensor(sol['x'])
+    return coef
 
 def KMM_weights_for_W_matrix(X_ker,X0,X,KMM_weights = False):
     if KMM_weights:
