@@ -25,15 +25,23 @@ if __name__ == "__main__":
         results_dict = yaml.safe_load(f)
     with open("cfg.yaml", "r") as f:
         cfg = yaml.safe_load(f)
-
-    results_dict["result"] = [int(p_val <0.05) for p_val in results_dict["p_val"]]
-    results_df = pd.DataFrame(results_dict)
-    if cfg["moving_param"]["beta_scalar"]:
-        moving_param = "beta_scalar"
-    if cfg["moving_param"]["n_train_sample"]:
-        moving_param = "n_sample"
-    plot = sns.lineplot(data = results_df,x=moving_param,y="result",hue = "test_stat")
-    fig = plot.get_figure()
-    fig.savefig("results_plot")
+    if "significance_level" in cfg["experiment"]:
+        results_dict["result"] = [int(p_val <0.05) for p_val in results_dict["p_val"]]
+        results_df = pd.DataFrame(results_dict)
+        if cfg["moving_param"]["beta_scalar"]:
+            moving_param = "beta_scalar"
+        if cfg["moving_param"]["n_train_sample"]:
+            moving_param = "n_sample"
+        plot = sns.lineplot(data = results_df,x=moving_param,y="result",hue = "test_stat")
+        fig = plot.get_figure()
+        fig.savefig("results_plot")
     
-
+    else:  
+        # new_sample_list = []
+        # for i in results_dict["n_sample"]:
+        #     new_sample_list += [i,i]
+        # results_dict["n_sample"] = new_sample_list
+        results_df = pd.DataFrame(results_dict)
+        plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_stat")
+        fig = plot.get_figure()
+        fig.savefig("results_plot")

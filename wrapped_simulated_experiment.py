@@ -88,6 +88,7 @@ def main(args, cfg,result_dict):
                 result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
                 result_dict["test_stat"] += [stat+func]
                 result_dict["p_val"] += [result["p_val"].item()]
+                result_dict["base_stat"] += [result["stat"].item()]
                 result_dict["result"] += [int(result["p_val"].item()<0.05)]
                 if cfg["moving_param"]["beta_scalar"]:
                     result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
@@ -98,6 +99,7 @@ def main(args, cfg,result_dict):
             result = comparison_model_dict[model](data_full)
             result_dict["test_stat"] += [model]
             result_dict["p_val"] += [result.item()]
+            result_dict["base_stat"] += [0]
             result_dict["result"] += [int(result.item()<0.05)]
             if cfg["moving_param"]["beta_scalar"]:
                 result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]

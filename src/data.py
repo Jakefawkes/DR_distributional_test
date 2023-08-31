@@ -47,7 +47,7 @@ class Data_object():
 
     def flip_T(self):
         self.T = 1-self.T
-        self.X0,self.X1 = self.X0,self.X1
+        self.X0,self.X1 = self.X1,self.X0
         self.Y0,self.Y1 = self.Y1,self.Y0
     
 def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False):

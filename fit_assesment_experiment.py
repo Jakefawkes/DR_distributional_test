@@ -49,7 +49,7 @@ kernel_dict = {"RBF" : kernel.RBFKernel}
 
 def main(args, cfg,result_dict):
  
-    weights_model = weights_model_dict[cfg["experiment"]["weights_model"]]
+    
 
     X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims=cfg["data"]["dx"])
     Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]](ard_num_dims=cfg["data"]["dy"])
@@ -77,39 +77,51 @@ def main(args, cfg,result_dict):
     assement_data = assement_data_cf.join(assement_data_f)
     
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
-    
+        data_train,data_test = make_data(cfg)
+        for weights_model_name in cfg["experiment"]["weights_model"]:
+            weights_model = weights_model_dict[weights_model_name]
+            weights_model.fit(X = data_train.X, y = data_train.T)
+            for stat in cfg["experiment"]["test_stat"]:
+                if stat == "DATE":
+                    for func in cfg["experiment"]["ker_regress"]:
+                        for KMM_truth in KMM_weights:
+                            
+                            if KMM_truth:
+                                kmm_string = "kmm" 
+                            else:
+                                kmm_string = ""
 
-        weights_model.fit(X = data_train.X, y = data_train.T)
-        
-        stat = "DATE"
-        for func in cfg["experiment"]["ker_regress"]:
+                            result_dict["test_stat"] += [stat+func+"0"+kmm_string]
+                            result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
+                        
+                            result_dict["test_stat"] += [stat+func+"1"+kmm_string]
+                            result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
 
-            result_dict["test_stat"] += [stat+func+"0"]
-            result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_weights)]
-            
-            result_dict["test_stat"] += [stat+func+"1"]
-            result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_weights)]
+                            if cfg["moving_param"]["beta_scalar"]:
+                                result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"],cfg["data"]["arguments"]["beta_scalar"]]
+                            if cfg["moving_param"]["n_train_sample"]:
+                                result_dict["n_sample"] += [cfg["data"]["n_train_sample"],cfg["data"]["n_train_sample"]]
 
-            if cfg["moving_param"]["beta_scalar"]:
-                result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
-            if cfg["moving_param"]["n_train_sample"]:
-                result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
+                if stat == "DETT":
+                    for func in cfg["experiment"]["ker_regress"]:
+                        for KMM_truth in KMM_weights:
+                            if KMM_truth:
+                                kmm_string = "kmm" 
+                            else:
+                                kmm_string = ""
 
-        stat = "DETT"
-        for func in cfg["experiment"]["ker_regress"]:
+                            result_dict["test_stat"] += [stat+func+"0"+kmm_string]
+                            result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
+                            
+                            result_dict["test_stat"] += [stat+func+"1"+kmm_string]
+                            result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
 
-            result_dict["test_stat"] += [stat+func+"0"]
-            result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_weights)]
-            
-            result_dict["test_stat"] += [stat+func+"1"]
-            result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_weights)]
+                            if cfg["moving_param"]["beta_scalar"]:
+                                result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"],cfg["data"]["arguments"]["beta_scalar"]]
+                            if cfg["moving_param"]["n_train_sample"]:
+                                result_dict["n_sample"] += [cfg["data"]["n_train_sample"],cfg["data"]["n_train_sample"]]
 
-            if cfg["moving_param"]["beta_scalar"]:
-                result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
-            if cfg["moving_param"]["n_train_sample"]:
-                result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
-
-    return weights_model
+    return None
 
 def make_data(cfg):
     if cfg["data"]["generator"] == "shift_data_simulation":
@@ -133,8 +145,8 @@ def make_assement_data(cfg):
         data_cf = data.shift_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**function_dict,**cfg["data"]["arguments"],counterfactual=True)
     
     if cfg["data"]["generator"] == "linear_data_simulation":
-        data_f = data.shift_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**function_dict,**cfg["data"]["arguments"],counterfactual=False)
-        data_cf = data.linear_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**cfg["data"]["arguments"],counterfactual=True)
+        data_f = data.linear_data_simulation(n_sample=cfg["data"]["n_train_sample"],**cfg["data"]["arguments"],counterfactual=False)
+        data_cf = data.linear_data_simulation(n_sample=cfg["data"]["n_train_sample"],**cfg["data"]["arguments"],counterfactual=False)
     return data_f,data_cf
 
 if __name__ == "__main__":
@@ -181,8 +193,15 @@ if __name__ == "__main__":
                 data_plot = data.linear_data_simulation(n_sample=1000,**cfg["data"]["arguments"])
                 data_plot.save_data_plot(direct_path)
                 save_plot_weights_hist(weights_model, data_plot,direct_path)
+
     dump_path = os.path.join(direct_path, 'scores.metrics')
     with open(dump_path, 'w') as f:
         yaml.dump(result_dict, f)
     logging.info(f"\n Dumped scores at {direct_path}")
+
+    plot_path = os.path.join(direct_path, 'results_plot')
+    results_df = pd.DataFrame(result_dict)
+    plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_stat")
+    fig = plot.get_figure()
+    fig.savefig(plot_path)
     # Run session
