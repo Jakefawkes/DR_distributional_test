@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 import math
 from cvxopt import matrix, solvers
+
 class ker():
     """Implementation of CME which takes in the required matricies and
     kernel as input """
@@ -17,9 +18,9 @@ class ker():
     
     def __call__(self,X1,X2 = None):
             if X2 == None:
-                   return self.k(X1).evaluate()    
+                   return self.k(X1).evaluate()
             else:
-                   return self.k(X1,X2).evaluate() 
+                   return self.k(X1,X2).evaluate()
             
 def get_W_matrix(K_X,c,func,weights = None):
     if weights is None:

@@ -47,7 +47,7 @@ def DATE_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,Wt
         K = ker(X_ker)
         L = ker(Y_ker)
 
-        t_vec = (data_test.T == t).long()
+        t_vec = (data_test.T == 1).long()
         w = (t_vec)*1/(weights)
 
         fit_stat = 1/(n**2)*L(fit_samples,fit_samples).sum()
@@ -56,6 +56,11 @@ def DATE_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,Wt
         fit_stat += 1/(m**2) * (w @ (L(data_test.Y,data_test.Y)@ w))
         fit_stat += 1/(m**2)*2 * (w @ (L(data_test.Y,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-w)))))
         fit_stat += 1/(m**2)*((1-w) @ (K(data_test.X,data_train.X1) @ (Wt @ ( L(data_train.Y1,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-w)) ) ))))
+        
+        if t==0:
+                data_test.flip_T()
+                data_train.flip_T()
+
         return fit_stat.item()
 
 def DETT_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,Wt,t=1):
