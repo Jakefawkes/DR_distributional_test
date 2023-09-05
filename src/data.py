@@ -112,3 +112,34 @@ def covar_from_text(sigma,d):
         return torch.eye(d)
     if sigma[0] == "C_ID":
         return sigma[1] * torch.eye(d)
+    
+def load_IDHP():
+    data = pd.read_csv("https://raw.githubusercontent.com/AMLab-Amsterdam/CEVAE/master/datasets/IHDP/csv/ihdp_npci_1.csv", header = None)
+    col =  ["treatment", "y_factual", "y_cfactual", "mu0", "mu1" ,]
+    for i in range(1,26):
+        col.append("x"+str(i))
+    data.columns = col
+    data = data.astype({"treatment":'float'}, copy=False)
+    data
+    X = torch.tensor(data[["x"+str(i) for  i in range(1,26)]].values)
+    Y = torch.tensor(data["y_factual"])
+    T = torch.tensor(data["treatment"])
+    Y_cf = torch.tensor(data["y_cfactual"])
+    return X,Y,T,Y_cf
+
+def IDHP_data_object(null_hypothesis = False):
+    X,Y,T,Y_cf = load_IDHP()
+    if null_hypothesis:
+        rand_mat = torch.rand(a.shape)
+        k_th_quant = torch.topk(rand_mat, 1, largest = False)[0][:,-1:]
+        mask = rand_mat <= k_th_quant
+        Y = (torch.concat([Y.unsqueeze(1),Y_cf.unsqueeze(1)],axis=1))[mask]
+    perm = torch.randperm(len(Y))
+    prop = torch.randn(len(Y)) > 0 
+    X_train, Y_train, T_train = X[perm][prop], Y[perm][prop], T[perm][prop]
+    X_test, Y_test, T_test = X[perm][~prop], Y[perm][~prop], T[perm][~prop]
+    data_train = Data_object(X_train, Y_train, T_train)
+    data_test = Data_object(X_test, Y_test, T_test)
+    data_full =data_test.join(data_train)
+    return data_train, data_test, data_full
+
