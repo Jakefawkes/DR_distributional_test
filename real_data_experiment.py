@@ -37,8 +37,11 @@ comparison_model_dict = {"DML":double_ml_test , "TMLE":tmle_test}
 def main(args, cfg,result_dict):
 
     weights_model = weights_model_dict[cfg["experiment"]["weights_model"]]
-    X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims=cfg["data"]["dx"])
-    Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]](ard_num_dims=cfg["data"]["dy"])
+    
+    if cfg["experiment"]["dataset"] == "IDHP":
+        dx = 25
+    X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims = 25)
+    Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]](ard_num_dims=1)
     n_bins = cfg["experiment"]["n_bins"]
     permute_weights = cfg["experiment"]["permute_weights"] 
     KMM_weights = cfg["experiment"]["KMM_weights"] 
@@ -50,7 +53,7 @@ def main(args, cfg,result_dict):
     cme_reg = cfg["experiment"]["cme_reg"]
 
     if cfg["experiment"]["dataset"] == "IDHP":
-        data_train,data_val, data_full = IDHP_data_object(cfg["experiment"]["Null"])
+        data_train,data_val, data_full = IDHP_data_object(cfg["experiment"]["null_hypothesis"])
 
     X_ker.lengthscale = compute_median_heuristic(data_full.X)
     Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
@@ -67,7 +70,7 @@ def main(args, cfg,result_dict):
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
         
         if cfg["experiment"]["dataset"] == "IDHP":
-            data_train,data_test, data_full = IDHP_data_object(cfg["experiment"]["Null"])
+            data_train,data_test, data_full = IDHP_data_object(cfg["experiment"]["null_hypothesis"])
             
         weights_model.fit(X= data_train.X, y=data_train.T)
         
@@ -76,12 +79,8 @@ def main(args, cfg,result_dict):
                 result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
                 result_dict["test_stat"] += [stat+func]
                 result_dict["p_val"] += [result["p_val"].item()]
-                result_dict["base_stat"] += [result["stat"].item()]
+                result_dict["base_stat"] += [result["stat"]]
                 result_dict["result"] += [int(result["p_val"].item()<0.05)]
-                if cfg["moving_param"]["beta_scalar"]:
-                    result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
-                if cfg["moving_param"]["n_train_sample"]:
-                    result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
         
         for model in cfg["experiment"]["comparison_model"]:
             result = comparison_model_dict[model](data_full)
@@ -89,25 +88,8 @@ def main(args, cfg,result_dict):
             result_dict["p_val"] += [result.item()]
             result_dict["base_stat"] += [0]
             result_dict["result"] += [int(result.item()<0.05)]
-            if cfg["moving_param"]["beta_scalar"]:
-                result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
-            if cfg["moving_param"]["n_train_sample"]:
-                result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
 
     return weights_model
-
-def make_data(cfg):
-    if cfg["data"]["generator"] == "shift_data_simulation":
-        function_dict = {}
-        for key in cfg["data"]["functions"]:
-            function_dict[key] = getattr(data,cfg["data"]["functions"][key])
-        data_train = data.shift_data_simulation(n_sample=cfg["data"]["n_train_sample"],**function_dict,**cfg["data"]["arguments"])
-        data_test = data.shift_data_simulation(n_sample=cfg["data"]["n_test_sample"],**function_dict,**cfg["data"]["arguments"])
-    
-    if cfg["data"]["generator"] == "linear_data_simulation":
-        data_train = data.linear_data_simulation(n_sample=cfg["data"]["n_train_sample"],**cfg["data"]["arguments"])
-        data_test = data.linear_data_simulation(n_sample=cfg["data"]["n_test_sample"],**cfg["data"]["arguments"])
-    return data_train,data_test
 
 
 if __name__ == "__main__":
@@ -126,34 +108,29 @@ if __name__ == "__main__":
     now = datetime.now()
     date_time_str = now.strftime("%m-%d %H:%M:%S")
     date_time_str = date_time_str.replace(" ","-")
-    result_dict = {"test_stat":[], "p_val":[],"result":[]}
+    result_dict = {"test_stat":[], "p_val":[],"result":[],"base_stat":[]}
 
-    if cfg["moving_param"]["beta_scalar"]:
-        result_dict["beta_scalar"] = []
-    if cfg["moving_param"]["n_train_sample"]:
-        result_dict["n_sample"] = []
     direct_path = os.path.join(args['--o'],date_time_str)
     # Create output directory if doesn't exists
     os.makedirs(direct_path, exist_ok=True)
     with open(os.path.join(direct_path, 'cfg.yaml'), 'w') as f:
         yaml.dump(cfg, f)
-    for value in cfg["moving_param"]["values"]:
-        cfg = update_cfg(cfg, value) 
-        weights_model = main(args, cfg,result_dict)
-        if args["--plot"]:
-            function_dict = {}
-            if cfg["data"]["generator"] == "shift_data_simulation":
-                for key in cfg["data"]["functions"]:
-                    function_dict[key] = getattr(data,cfg["data"]["functions"][key])
 
-                data_plot = data.shift_data_simulation(n_sample=1000,**function_dict,**cfg["data"]["arguments"])
-                data_plot.save_data_plot(direct_path)
-                save_plot_weights_hist(weights_model, data_plot,direct_path)
+    weights_model = main(args, cfg,result_dict)
+    if args["--plot"]:
+        function_dict = {}
+        if cfg["data"]["generator"] == "shift_data_simulation":
+            for key in cfg["data"]["functions"]:
+                function_dict[key] = getattr(data,cfg["data"]["functions"][key])
 
-            if cfg["data"]["generator"] == "linear_data_simulation":
-                data_plot = data.linear_data_simulation(n_sample=1000,**cfg["data"]["arguments"])
-                data_plot.save_data_plot(direct_path)
-                save_plot_weights_hist(weights_model, data_plot,direct_path)
+            data_plot = data.shift_data_simulation(n_sample=1000,**function_dict,**cfg["data"]["arguments"])
+            data_plot.save_data_plot(direct_path)
+            save_plot_weights_hist(weights_model, data_plot,direct_path)
+
+        if cfg["data"]["generator"] == "linear_data_simulation":
+            data_plot = data.linear_data_simulation(n_sample=1000,**cfg["data"]["arguments"])
+            data_plot.save_data_plot(direct_path)
+            save_plot_weights_hist(weights_model, data_plot,direct_path)
     dump_path = os.path.join(direct_path, 'scores.metrics')
     with open(dump_path, 'w') as f:
         yaml.dump(result_dict, f)
