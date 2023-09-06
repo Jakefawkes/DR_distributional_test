@@ -71,7 +71,7 @@ def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False
 
     return Data_object(X,Y,T)
 
-def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_sample,counterfactual=False):
+def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_sample,counterfactual=False,squared = False):
 
     alpha_vec = torch.tensor(alpha_vec).float()
     beta_vec = torch.tensor(beta_vec).float()
@@ -79,8 +79,12 @@ def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_s
     d = len(alpha_vec)
 
     X = torch.randn((n_sample,d)).float()
-    T = torch.bernoulli(torch.sigmoid( X @ alpha_vec ))
     
+    if squared:
+        T = torch.bernoulli(torch.sigmoid( (X @ alpha_vec)**2 - ((X @ alpha_vec)**2).mean() ))
+    else:
+        T = torch.bernoulli(torch.sigmoid( (X @ alpha_vec) ))
+
     if effect_var == "Const":
         effect_vec = torch.ones(n_sample)
 
@@ -121,19 +125,20 @@ def load_IDHP():
     data.columns = col
     data = data.astype({"treatment":'float'}, copy=False)
     data
-    X = torch.tensor(data[["x"+str(i) for  i in range(1,26)]].values)
-    Y = torch.tensor(data["y_factual"])
-    T = torch.tensor(data["treatment"])
-    Y_cf = torch.tensor(data["y_cfactual"])
+    X = torch.tensor(data[["x"+str(i) for  i in range(1,26)]].values,dtype=torch.float)
+    Y = torch.tensor(data["y_factual"],dtype=torch.float)
+    T = torch.tensor(data["treatment"],dtype=torch.float)
+    Y_cf = torch.tensor(data["y_cfactual"],dtype=torch.float)
     return X,Y,T,Y_cf
 
 def IDHP_data_object(null_hypothesis = False):
     X,Y,T,Y_cf = load_IDHP()
     if null_hypothesis:
+        a = (torch.concat([Y.unsqueeze(1),Y_cf.unsqueeze(1)],axis=1))
         rand_mat = torch.rand(a.shape)
         k_th_quant = torch.topk(rand_mat, 1, largest = False)[0][:,-1:]
         mask = rand_mat <= k_th_quant
-        Y = (torch.concat([Y.unsqueeze(1),Y_cf.unsqueeze(1)],axis=1))[mask]
+        Y = a[mask]
     perm = torch.randperm(len(Y))
     prop = torch.randn(len(Y)) > 0 
     X_train, Y_train, T_train = X[perm][prop], Y[perm][prop], T[perm][prop]

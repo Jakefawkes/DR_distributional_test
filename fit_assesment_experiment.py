@@ -45,7 +45,7 @@ def construct_dir_name(cfg, value):
         return "n_sample="+str(value)
     
 weights_model_dict = {"LR": LogisticRegression(), "Adaboost":AdaBoostClassifier(),"Decision_Tree":DecisionTreeClassifier(),"GP":GaussianProcessClassifier(),"MLP":MLPClassifier()}
-kernel_dict = {"RBF" : kernel.RBFKernel}
+kernel_dict = {"RBF" : kernel.RBFKernel, "Linear": kernel.LinearKernel}
 
 def main(args, cfg,result_dict):
  
@@ -60,8 +60,10 @@ def main(args, cfg,result_dict):
     data_train,data_val = make_data(cfg)
     data_train,data_test = make_data(cfg)
     data_full = data_train.join(data_test)
-    X_ker.lengthscale = compute_median_heuristic(data_full.X)
-    Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
+    if cfg["experiment"]["X_ker"] == "RBF":
+        X_ker.lengthscale = compute_median_heuristic(data_full.X)
+    if cfg["experiment"]["Y_ker"] == "RBF":
+        Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
 
     if type(cme_reg) is list:
         cross_val = True
@@ -91,10 +93,11 @@ def main(args, cfg,result_dict):
                             else:
                                 kmm_string = ""
 
-                            result_dict["test_stat"] += [stat+func+"0"+kmm_string]
+                            
+                            result_dict["test_stat"] += [stat+func+"0"+weights_model_name+kmm_string]
                             result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
                         
-                            result_dict["test_stat"] += [stat+func+"1"+kmm_string]
+                            result_dict["test_stat"] += [stat+func+"1"+weights_model_name+kmm_string]
                             result_dict["fit_score"] += [goodness_of_fit_test(assement_data.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
 
                             if cfg["moving_param"]["beta_scalar"]:
@@ -110,10 +113,10 @@ def main(args, cfg,result_dict):
                             else:
                                 kmm_string = ""
 
-                            result_dict["test_stat"] += [stat+func+"0"+kmm_string]
+                            result_dict["test_stat"] += [stat+func+"0"+weights_model_name+kmm_string]
                             result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y0,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=0,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
                             
-                            result_dict["test_stat"] += [stat+func+"1"+kmm_string]
+                            result_dict["test_stat"] += [stat+func+"1"+weights_model_name+kmm_string]
                             result_dict["fit_score"] += [goodness_of_fit_test(assement_data_cf.Y1,data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,t=1,reg=cme_reg,func=func,KMM_weights=KMM_truth)]
 
                             if cfg["moving_param"]["beta_scalar"]:

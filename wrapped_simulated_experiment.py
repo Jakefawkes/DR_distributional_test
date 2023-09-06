@@ -28,6 +28,7 @@ import numpy as np
 from datetime import datetime
 from src.utils import *
 from src.comparison_models import tmle_test,double_ml_test
+import random
 
 def update_cfg(cfg, value):
     if cfg["moving_param"]["beta_scalar"]:
@@ -88,7 +89,7 @@ def main(args, cfg,result_dict):
                 result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
                 result_dict["test_stat"] += [stat+func]
                 result_dict["p_val"] += [result["p_val"].item()]
-                result_dict["base_stat"] += [result["stat"].item()]
+                result_dict["base_stat"] += [result["stat"]]
                 result_dict["result"] += [int(result["p_val"].item()<0.05)]
                 if cfg["moving_param"]["beta_scalar"]:
                     result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
@@ -138,13 +139,16 @@ if __name__ == "__main__":
     now = datetime.now()
     date_time_str = now.strftime("%m-%d %H:%M:%S")
     date_time_str = date_time_str.replace(" ","-")
-    result_dict = {"test_stat":[], "p_val":[],"result":[]}
+    result_dict = {"test_stat":[], "p_val":[],"result":[],"base_stat":[]}
 
+    torch.random.manual_seed(cfg["experiment"]["seed"])
+    random.seed(cfg["experiment"]["seed"])
     if cfg["moving_param"]["beta_scalar"]:
         result_dict["beta_scalar"] = []
     if cfg["moving_param"]["n_train_sample"]:
         result_dict["n_sample"] = []
     direct_path = os.path.join(args['--o'],date_time_str)
+    dump_path = os.path.join(direct_path, 'scores.metrics')
     # Create output directory if doesn't exists
     os.makedirs(direct_path, exist_ok=True)
     with open(os.path.join(direct_path, 'cfg.yaml'), 'w') as f:
@@ -166,8 +170,8 @@ if __name__ == "__main__":
                 data_plot = data.linear_data_simulation(n_sample=1000,**cfg["data"]["arguments"])
                 data_plot.save_data_plot(direct_path)
                 save_plot_weights_hist(weights_model, data_plot,direct_path)
-    dump_path = os.path.join(direct_path, 'scores.metrics')
-    with open(dump_path, 'w') as f:
-        yaml.dump(result_dict, f)
-    logging.info(f"\n Dumped scores at {direct_path}")
-    # Run session
+            
+        with open(dump_path, 'w') as f:
+            yaml.dump(result_dict, f)
+        logging.info(f"\n Dumped scores at {direct_path}")
+        # Run session

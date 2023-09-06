@@ -12,7 +12,7 @@ experiment:
 
   test_stat : [DATE,DETT]
 
-  ker_regress: [cme,zero]
+  ker_regress: [zero]
 
   weights_model : Linear
 

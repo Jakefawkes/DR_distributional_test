@@ -21,7 +21,7 @@ def double_ml_test(test_data):
 
     ml_l_bonus = clone(learner)
 
-    ml_m_bonus = MLPClassifier()
+    ml_m_bonus = LogisticRegression()
 
     # ml_m_bonus = clone(learner)
 
