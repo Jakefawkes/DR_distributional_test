@@ -1,6 +1,6 @@
 ################################################################################
 #   CONFIGURATIONS FOR SIMULATED DATA MODEL
-# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/plot_for_robin
+# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/
 ################################################################################
 
 # Experiment

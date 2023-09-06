@@ -57,6 +57,10 @@ def main(args, cfg,result_dict):
 
     X_ker.lengthscale = compute_median_heuristic(data_full.X)
     Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
+
+    a,b = X_ker.lengthscale,Y_ker.lengthscale
+    a[a==0],b[b==0] = 1,1
+    X_ker.lengthscale,Y_ker.lengthscale = a,b
     if type(cme_reg) is list:
         cross_val = True
         reg_param_range = np.linspace(cme_reg[0],cme_reg[1],num=cme_reg[2])  
@@ -131,6 +135,7 @@ if __name__ == "__main__":
             data_plot = data.linear_data_simulation(n_sample=1000,**cfg["data"]["arguments"])
             data_plot.save_data_plot(direct_path)
             save_plot_weights_hist(weights_model, data_plot,direct_path)
+
     dump_path = os.path.join(direct_path, 'scores.metrics')
     with open(dump_path, 'w') as f:
         yaml.dump(result_dict, f)
