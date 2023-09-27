@@ -5,3 +5,4 @@ config
 config/wrapped_simulaton_cfg.yaml
 config/wrapped_simulaton_cfg.yaml
 .gitignore
+data

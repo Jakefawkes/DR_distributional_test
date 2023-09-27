@@ -131,7 +131,37 @@ def load_IDHP():
     Y_cf = torch.tensor(data["y_cfactual"],dtype=torch.float)
     return X,Y,T,Y_cf
 
-def IDHP_data_object(null_hypothesis = False):
+def load_real_data_object(dataset= "IDHP",null_hypothesis = False):
+
+    if dataset == "IDHP":
+        X,Y,T,Y_cf = load_IDHP()
+    if dataset == "twins":
+        X,Y,T,Y_cf = load_twins()
+
+    if null_hypothesis:
+        a = (torch.concat([Y.unsqueeze(1),Y_cf.unsqueeze(1)],axis=1))
+        rand_mat = torch.rand(a.shape)
+        k_th_quant = torch.topk(rand_mat, 1, largest = False)[0][:,-1:]
+        mask = rand_mat <= k_th_quant
+        Y = a[mask]
+    perm = torch.randperm(len(Y))
+    prop = torch.randn(len(Y)) > 0 
+    X_train, Y_train, T_train = X[perm][prop], Y[perm][prop], T[perm][prop]
+    X_test, Y_test, T_test = X[perm][~prop], Y[perm][~prop], T[perm][~prop]
+    data_train = Data_object(X_train, Y_train, T_train)
+    data_test = Data_object(X_test, Y_test, T_test)
+    data_full =data_test.join(data_train)
+    return data_train, data_test, data_full
+
+def load_twins():
+    data = pd.read_csv("https://raw.githubusercontent.com/shalit-lab/Benchmarks/master/Twins/Final_data_twins.csv")
+    X = torch.tensor(data.drop(['T', 'y0', 'y1', 'yf', 'y_cf', 'Propensity'],axis='columns').values,)
+    Y = torch.tensor(data["yf"],dtype=torch.float)
+    T = torch.tensor(data["T"],dtype=torch.float)
+    Y_cf = torch.tensor(data["y_cf"],dtype=torch.float)
+    return X,Y,T,Y_cf
+
+def twins_data_object(null_hypothesis = False):
     X,Y,T,Y_cf = load_IDHP()
     if null_hypothesis:
         a = (torch.concat([Y.unsqueeze(1),Y_cf.unsqueeze(1)],axis=1))
@@ -148,3 +178,26 @@ def IDHP_data_object(null_hypothesis = False):
     data_full =data_test.join(data_train)
     return data_train, data_test, data_full
 
+def LBIDD_data_object(size = "1k",null_hypothesis = False):
+    X_data = pd.read_csv("data/x.csv")
+    Y_data = pd.read_csv("data/"+size+"_f.csv")
+    Y_CF_data = pd.read_csv("data/"+size+"_cf.csv")
+    data = Y_data.merge(X_data,on="sample_id")
+    data = Y_CF_data.merge(data,on="sample_id")
+    X = torch.tensor(data.drop(["sample_id","y0","y1","z","y"],axis='columns').values,dtype=torch.float)
+    Y = torch.tensor(data[["y"]].values,dtype=torch.float).squeeze(1)
+    T = torch.tensor(data[["z"]].values,dtype=torch.float).squeeze(1)
+    if null_hypothesis:
+        Y_cf = torch.tensor(data[["y0","y1"]].values,dtype=torch.float)
+        rand_mat = torch.rand(Y_cf .shape)
+        k_th_quant = torch.topk(rand_mat, 1, largest = False)[0][:,-1:]
+        mask = rand_mat <= k_th_quant
+        Y =  Y_cf[mask]
+    perm = torch.randperm(len(Y))
+    prop = torch.randn(len(Y)) > 0 
+    X_train, Y_train, T_train = X[perm][prop], Y[perm][prop], T[perm][prop]
+    X_test, Y_test, T_test = X[perm][~prop], Y[perm][~prop], T[perm][~prop]
+    data_train = Data_object(X_train, Y_train, T_train)
+    data_test = Data_object(X_test, Y_test, T_test)
+    data_full =data_test.join(data_train)
+    return data_train, data_test, data_full
