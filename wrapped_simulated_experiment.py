@@ -171,7 +171,8 @@ if __name__ == "__main__":
                 data_plot.save_data_plot(direct_path)
                 save_plot_weights_hist(weights_model, data_plot,direct_path)
             
-        with open(dump_path, 'w') as f:
-            yaml.dump(result_dict, f)
+        # Run session
+    with open(dump_path, 'w') as f:
+        yaml.dump(result_dict, f)
         logging.info(f"\n Dumped scores at {direct_path}")
         # Run session

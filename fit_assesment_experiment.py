@@ -148,8 +148,8 @@ def make_assement_data(cfg):
         data_cf = data.shift_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**function_dict,**cfg["data"]["arguments"],counterfactual=True)
     
     if cfg["data"]["generator"] == "linear_data_simulation":
-        data_f = data.linear_data_simulation(n_sample=cfg["data"]["n_train_sample"],**cfg["data"]["arguments"],counterfactual=False)
-        data_cf = data.linear_data_simulation(n_sample=cfg["data"]["n_train_sample"],**cfg["data"]["arguments"],counterfactual=False)
+        data_f = data.linear_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**cfg["data"]["arguments"],counterfactual=False)
+        data_cf = data.linear_data_simulation(n_sample=cfg["experiment"]["n_cf_sample"],**cfg["data"]["arguments"],counterfactual=True)
     return data_f,data_cf
 
 if __name__ == "__main__":
