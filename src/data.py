@@ -57,15 +57,15 @@ def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False
     covar = covar_from_text(sigma,d)
 
     T = torch.concat([torch.zeros(math.floor(n_sample/2)),torch.ones(math.ceil(n_sample/2))])
-
+    if counterfactual:
+        T = 1-T
     X0 = torch.randn((math.floor(n_sample/2),d))
     X1 = torch.randn((math.ceil(n_sample/2),d)) @ covar.T + mu
-    if counterfactual:
-        Y1 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
-        Y0 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
-    else:
-        Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
-        Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
+    # if counterfactual:
+    #     Y1 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
+    #     Y0 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
+    Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
+    Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
     X = torch.concat([X0,X1])
     Y = torch.concat([Y0,Y1])
 
@@ -95,9 +95,9 @@ def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_s
         effect_vec = 2*torch.rand(n_sample)-1
 
     if counterfactual:
-        Y =  X @ alpha_vec + beta_scalar * (effect_vec*(1-T)) + noise_Y * torch.randn((n_sample))
-    else:
-        Y =  X @ alpha_vec + beta_scalar * (effect_vec*(T)) + noise_Y * torch.randn((n_sample))
+        # Y =  X @ alpha_vec + beta_scalar * (effect_vec*(1-T)) + noise_Y * torch.randn((n_sample))
+        T = 1-T
+    Y =  X @ alpha_vec + beta_scalar * (effect_vec*(T)) + noise_Y * torch.randn((n_sample))
     
     return Data_object(X,Y,T)
 
