@@ -28,7 +28,7 @@ import numpy as np
 from datetime import datetime
 from src.utils import *
 from src.comparison_models import tmle_test,double_ml_test
-from src.data import IDHP_data_object
+from src.data import LBIDD_data_object,load_real_data_object
     
 weights_model_dict = {"LR": LogisticRegression(), "Adaboost":AdaBoostClassifier(),"Decision_Tree":DecisionTreeClassifier(),"GP":GaussianProcessClassifier(),"MLP":MLPClassifier()}
 kernel_dict = {"RBF" : kernel.RBFKernel}
@@ -40,7 +40,14 @@ def main(args, cfg,result_dict):
     
     if cfg["experiment"]["dataset"] == "IDHP":
         dx = 25
-    X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims = 25)
+
+    if cfg["experiment"]["dataset"] == "Twins":
+        dx = 76
+
+    if cfg["experiment"]["dataset"] == "LBIDD":
+        dx = 177
+        
+    X_ker = kernel_dict[cfg["experiment"]["X_ker"]](ard_num_dims = dx)
     Y_ker = kernel_dict[cfg["experiment"]["Y_ker"]](ard_num_dims=1)
     n_bins = cfg["experiment"]["n_bins"]
     permute_weights = cfg["experiment"]["permute_weights"] 
@@ -53,7 +60,13 @@ def main(args, cfg,result_dict):
     cme_reg = cfg["experiment"]["cme_reg"]
 
     if cfg["experiment"]["dataset"] == "IDHP":
-        data_train,data_val, data_full = IDHP_data_object(cfg["experiment"]["null_hypothesis"])
+        data_train,data_val, data_full =load_real_data_object(dataset= "IDHP",null_hypothesis = cfg["experiment"]["null_hypothesis"])
+    
+    if cfg["experiment"]["dataset"] == "Twins":
+        data_train,data_val, data_full = load_real_data_object(dataset= "twins",null_hypothesis = cfg["experiment"]["null_hypothesis"])
+    
+    if cfg["experiment"]["dataset"] == "LBIDD":
+        data_train,data_val, data_full = LBIDD_data_object(size = cfg["experiment"]["LBIDD_size"],null_hypothesis = cfg["experiment"]["null_hypothesis"])
 
     X_ker.lengthscale = compute_median_heuristic(data_full.X)
     Y_ker.lengthscale = compute_median_heuristic(data_full.Y)
@@ -74,7 +87,13 @@ def main(args, cfg,result_dict):
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
         
         if cfg["experiment"]["dataset"] == "IDHP":
-            data_train,data_test, data_full = IDHP_data_object(cfg["experiment"]["null_hypothesis"])
+            data_train,data_test, data_full = oad_real_data_object(dataset= "IDHP",null_hypothesis = cfg["experiment"]["null_hypothesis"])
+
+        if cfg["experiment"]["dataset"] == "Twins":
+            data_train,data_test, data_full = load_real_data_object(dataset= "twins",null_hypothesis = cfg["experiment"]["null_hypothesis"])
+    
+        if cfg["experiment"]["dataset"] == "LBIDD":
+            data_train,data_test, data_full = LBIDD_data_object(size = cfg["experiment"]["LBIDD_size"],null_hypothesis = cfg["experiment"]["null_hypothesis"])
             
         weights_model.fit(X= data_train.X, y=data_train.T)
         

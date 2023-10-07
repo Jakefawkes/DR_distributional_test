@@ -148,6 +148,11 @@ def load_real_data_object(dataset= "IDHP",null_hypothesis = False):
     prop = torch.randn(len(Y)) > 0 
     X_train, Y_train, T_train = X[perm][prop], Y[perm][prop], T[perm][prop]
     X_test, Y_test, T_test = X[perm][~prop], Y[perm][~prop], T[perm][~prop]
+
+    if dataset == "twins":
+        X_train, Y_train, T_train = X_train[:500], Y_train[:500], T_train[:500]
+        X_test, Y_test, T_test = X_test[500:1001], Y_test[500:1001], T_test[500:1001]
+
     data_train = Data_object(X_train, Y_train, T_train)
     data_test = Data_object(X_test, Y_test, T_test)
     data_full =data_test.join(data_train)
