@@ -61,11 +61,12 @@ def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False
         T = 1-T
     X0 = torch.randn((math.floor(n_sample/2),d))
     X1 = torch.randn((math.ceil(n_sample/2),d)) @ covar.T + mu
-    # if counterfactual:
-    #     Y1 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
-    #     Y0 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
-    Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
-    Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
+    if counterfactual:
+        Y0 = g_1(X0) + noise*torch.randn(g_1(X0).shape)
+        Y1 = g_0(X1) + noise*torch.randn(g_0(X1).shape)
+    else:
+        Y0 = g_0(X0) + noise*torch.randn(g_0(X0).shape)
+        Y1 = g_1(X1) + noise*torch.randn(g_1(X1).shape)
     X = torch.concat([X0,X1])
     Y = torch.concat([Y0,Y1])
 
@@ -109,7 +110,8 @@ f_4 = lambda X: X[:,0]
 f_5 = lambda X: torch.sin(X[:,0])+ torch.sin(2*X[:,1])
 f_6 = lambda X: torch.sin(X[:,0])+ torch.sin(X[:,1])
 f_7 = lambda X: X[:,0]**2 + X[:,1] + X[:,2]>2
-
+f_8 = lambda X: X[:,0]**2 
+f_9 = lambda X: X[:,0]**2 + 3
 
 def covar_from_text(sigma,d):
     if sigma[0] == "ID":
