@@ -79,10 +79,10 @@ def DETT_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,Wt
 
         fit_stat = 1/(n**2)*L(fit_samples,fit_samples).sum()
         fit_stat += -2/(n*m)*(w @ L(data_test.Y,fit_samples)).sum()
-        fit_stat += -2/(n*m)*((L(fit_samples,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X) @ (1-t-w))))).sum()
+        fit_stat += -2/(n*m)*((L(fit_samples,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X) @ (1-data_test.T-w))))).sum()
         fit_stat += 1/(m**2) * (w @ (L(data_test.Y,data_test.Y)@ w))
-        fit_stat += 1/(m**2)*2 * (w @ (L(data_test.Y,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-t-w)))))
-        fit_stat += 1/(m**2)*((1-t-w) @ (K(data_test.X,data_train.X1) @ (Wt @ ( L(data_train.Y1,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-t-w)) ) ))))
+        fit_stat += 1/(m**2)*2 * (w @ (L(data_test.Y,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-data_test.T-w)))))
+        fit_stat += 1/(m**2)*((1-data_test.T-w) @ (K(data_test.X,data_train.X1) @ (Wt @ ( L(data_train.Y1,data_train.Y1) @ (Wt @ (K(data_train.X1,data_test.X)@ (1-data_test.T-w)) ) ))))
         
         if t==0:
                 data_test.flip_T()

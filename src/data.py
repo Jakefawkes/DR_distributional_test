@@ -97,7 +97,7 @@ def linear_data_simulation(alpha_vec,beta_vec,beta_scalar,effect_var,noise_Y,n_s
     if counterfactual:
         # Y =  X @ alpha_vec + beta_scalar * (effect_vec*(1-T)) + noise_Y * torch.randn((n_sample))
         T = 1-T
-    Y =  X @ alpha_vec + beta_scalar * (effect_vec*(T)) + noise_Y * torch.randn((n_sample))
+    Y =  X @ beta_vec + beta_scalar * (effect_vec*(T)) + noise_Y * torch.randn((n_sample))
     
     return Data_object(X,Y,T)
 
