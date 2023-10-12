@@ -9,10 +9,10 @@ moving_param:
   beta_scalar: True
   n_train_sample: False
   n_test_sample: False
-  values : [0]
+  values : [0,0.4,0.8,1.2,1.6]
 experiment:
 
-  n_iter: 400
+  n_iter: 100
 
   test_stat : [DATE,DETT]
 
@@ -28,15 +28,15 @@ experiment:
 
   significance_level : 0.05
 
-  n_bins: 300
+  n_bins: 100
 
   cme_reg: 0.001
 
-  permute_weights: False
+  permute_weights: true
   
   KMM_weights: False
 
-  seed: 24
+  seed: 25
 
 
 # data:
@@ -65,9 +65,9 @@ data:
     # Name of the generator
   generator: linear_data_simulation
 
-  n_train_sample: 2500
+  n_train_sample: 1000
 
-  n_test_sample: 2500
+  n_test_sample: 1000
   
   dx: 9
   

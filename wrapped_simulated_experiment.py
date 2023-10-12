@@ -29,7 +29,7 @@ from datetime import datetime
 from src.utils import *
 from src.comparison_models import tmle_test,double_ml_test
 import random
-
+import math
 def update_cfg(cfg, value):
     if cfg["moving_param"]["beta_scalar"]:
         cfg["data"]["arguments"]["beta_scalar"] = value
@@ -82,7 +82,6 @@ def main(args, cfg,result_dict):
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
         data_train,data_test = make_data(cfg)
         data_full = data_train.join(data_test)
-        weights_model.fit(X= data_train.X, y=data_train.T)
         
         for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:

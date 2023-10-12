@@ -17,6 +17,9 @@ class Data_object():
 
     def return_permuted_data(self,permutation):
         return Data_object(self.X,self.Y,self.T[permutation])
+    
+    def return_shuffled_data(self,permutation):
+        return Data_object(self.X[permutation],self.Y[permutation],self.T[permutation])
 
     def plot_data(self):
         df = pd.DataFrame(np.array(self.X))
@@ -49,6 +52,10 @@ class Data_object():
         self.T = 1-self.T
         self.X0,self.X1 = self.X1,self.X0
         self.Y0,self.Y1 = self.Y1,self.Y0
+    
+    def split(self):
+        n_half = math.floor(len(self.T)/2)
+        return Data_object(self.X[:n_half],self.Y[:n_half],self.T[:n_half]),Data_object(self.X[n_half:],self.Y[n_half:],self.T[n_half:])
     
 def shift_data_simulation(mu,sigma,g_0,g_1,noise,n_sample,counterfactual = False):
 
@@ -162,7 +169,7 @@ def load_real_data_object(dataset= "IDHP",null_hypothesis = False):
 
 def load_twins():
     data = pd.read_csv("https://raw.githubusercontent.com/shalit-lab/Benchmarks/master/Twins/Final_data_twins.csv")
-    X = torch.tensor(data.drop(['T', 'y0', 'y1', 'yf', 'y_cf', 'Propensity'],axis='columns').values,)
+    X = torch.tensor(data.drop(['T', 'y0', 'y1', 'yf', 'y_cf', 'Propensity'],axis='columns').values,dtype=torch.float)
     Y = torch.tensor(data["yf"],dtype=torch.float)
     T = torch.tensor(data["T"],dtype=torch.float)
     Y_cf = torch.tensor(data["y_cf"],dtype=torch.float)

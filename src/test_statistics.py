@@ -35,6 +35,20 @@ def DETT_test_stat(data_train,data_test,X_ker,Y_ker,weights,W1):
         test_stat = 1/(m**2) * w @ test_stat 
         return test_stat.item()
 
+def diff_test_stat(data_train,data_test,X_ker,Y_ker):
+        # Stat conditional on T=0 
+        K = ker(X_ker)
+        L = ker(Y_ker)
+
+        data_full = data_train.join(data_test)
+        m = len(data_test.Y0)
+        n = len(data_test.Y1)
+
+        test_stat = L(data_full.Y1,data_full.Y1).sum()/(n*n)
+        test_stat += -2*L(data_full.Y1,data_full.Y0).sum()/(n*m)
+        test_stat += L(data_full.Y0,data_full.Y0).sum()/(m*m)
+        return test_stat.item()
+
 def DATE_goodness_of_fit(fit_samples,data_train,data_test,X_ker,Y_ker,weights,Wt,t=1):
         
         if t==0:

@@ -87,7 +87,7 @@ def main(args, cfg,result_dict):
     for i in tqdm.tqdm(range(cfg["experiment"]["n_iter"])):
         
         if cfg["experiment"]["dataset"] == "IDHP":
-            data_train,data_test, data_full = oad_real_data_object(dataset= "IDHP",null_hypothesis = cfg["experiment"]["null_hypothesis"])
+            data_train,data_test, data_full = load_real_data_object(dataset= "IDHP",null_hypothesis = cfg["experiment"]["null_hypothesis"])
 
         if cfg["experiment"]["dataset"] == "Twins":
             data_train,data_test, data_full = load_real_data_object(dataset= "twins",null_hypothesis = cfg["experiment"]["null_hypothesis"])
