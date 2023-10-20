@@ -25,7 +25,7 @@ def invert_permutation(permutation):
     inv[permutation] = np.arange(len(inv), dtype=inv.dtype)
     return inv
 
-def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,reg=[1,1],permute_weights=False,func="cme", KMM_weights = False):
+def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,num_train_permutations=5,reg=[1,1],permute_weights=False,func="cme", KMM_weights = False):
     
     weights_model_train = clone(weights_model)
     weights_model_test = clone(weights_model)
@@ -71,65 +71,53 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     binned_weights_train = get_binned_weights(weights_train_perm, n_bins)
     binned_weights_test = get_binned_weights(weights_test_perm, n_bins)
 
-    train_permutation = binned_permutation(binned_weights_train)
-    train_permutation_inv = invert_permutation(train_permutation)
-
-    permuted_train_data = data_train.return_permuted_data(train_permutation)
-    permuted_train_data_inv = data_train.return_permuted_data(train_permutation)
-
-    permuted_weights_model = clone(weights_model)
-    permuted_inv_weights_model = clone(weights_model)
-    permuted_weights_model.fit(permuted_train_data.X,permuted_train_data.T)
-    permuted_inv_weights_model.fit(permuted_train_data_inv.X,permuted_train_data_inv.T)
-    
     if test_stat == "DATE":
-
-        W0_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X0,permuted_train_data.X,KMM_weights)
-        W1_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
-        
-        W0_weights_perm_inv = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data_inv.X0,permuted_train_data_inv.X,KMM_weights)
-        W1_weights_perm_inv = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data_inv.X1,permuted_train_data_inv.X,KMM_weights)
-
-        W0_permuted = get_W_matrix(X_ker(permuted_train_data.X0).evaluate(),reg[0],func,W0_weights_perm)
-        W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func,W1_weights_perm)
-        W0_permuted_inv = get_W_matrix(X_ker(permuted_train_data_inv.X0).evaluate(),reg[0],func,W0_weights_perm_inv)
-        W1_permuted_inv = get_W_matrix(X_ker(permuted_train_data_inv.X1).evaluate(),reg[1],func,W1_weights_perm_inv)
+        permuted_model_list = [(data_train,weights_model,W0,W1)]
     
     elif test_stat == "DETT":
-        W1_weights = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
-        W1_weights_perm_inv = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data_inv.X1,permuted_train_data_inv.X,KMM_weights)
-        W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func)
-        W1_permuted_inv = get_W_matrix(X_ker(permuted_train_data_inv.X1).evaluate(),reg[1],func,W1_weights_perm_inv)
+        permuted_model_list = [(data_train,weights_model,W1)]
+
+    for i in range(num_train_permutations):
+        train_permutation = binned_permutation(binned_weights_train)
+        permuted_train_data = data_train.return_permuted_data(train_permutation)
+
+        if test_stat == "DATE":
+
+            W0_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X0,permuted_train_data.X,KMM_weights)
+            W1_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
+            
+            W0_permuted = get_W_matrix(X_ker(permuted_train_data.X0).evaluate(),reg[0],func,W0_weights_perm)
+            W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func,W1_weights_perm)
+            
+            permuted_weights_model = clone(weights_model)
+            permuted_weights_model.fit(permuted_train_data.X,permuted_train_data.T)
+            permuted_model_list.append((permuted_train_data,permuted_weights_model,W0_permuted,W1_permuted))
+        
+        elif test_stat == "DETT":
+
+            W1_weights_perm = 1/KMM_weights_for_W_matrix(X_ker,permuted_train_data.X1,permuted_train_data.X,KMM_weights)
+            
+            W1_permuted = get_W_matrix(X_ker(permuted_train_data.X1).evaluate(),reg[1],func,W1_weights_perm)
+            permuted_weights_model = clone(weights_model)
+            permuted_weights_model.fit(permuted_train_data.X,permuted_train_data.T)
+            permuted_model_list.append((permuted_train_data,permuted_weights_model,W1_permuted))
 
     permuted_stats = [base_stat]
 
     for i in range(n_permutations):
         test_permutation = binned_permutation(binned_weights_test)
         permuted_test_data = data_test.return_permuted_data(test_permutation)
-        # if permute_weights:
-        #     test_stat_weight = weights_test[test_permutation]
-        # else:
-        #     test_stat_weight = weights_test
+
+        sample_index = random.randrange(len(permuted_model_list))
+        permuted_models = permuted_model_list[i]
         if test_stat == "DATE":
-            if bool(random.getrandbits(1)):
-                permuted_stats.append(DATE_test_stat(permuted_train_data,permuted_test_data,X_ker,Y_ker,weights_test,W0,W1))
-            else:
-                if bool(random.getrandbits(1)):
-                    test_stat_weight_permuted = torch.tensor(permuted_weights_model.predict_proba(permuted_test_data.X)[:,1]).float()
-                    permuted_stats.append(DATE_test_stat(permuted_train_data,permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,W0_permuted,W1_permuted))
-                else:
-                    test_stat_weight_permuted_inv = torch.tensor(permuted_inv_weights_model.predict_proba(permuted_test_data.X)[:,1]).float()
-                    permuted_stats.append(DATE_test_stat(permuted_train_data,permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted_inv,W0_permuted_inv,W1_permuted_inv))
+            test_stat_weight_permuted = torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float()
+            permuted_stats.append(DATE_test_stat(permuted_models[0],permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,permuted_models[2],permuted_models[3]))
+
         elif test_stat == "DETT":
-            if bool(random.getrandbits(1)):
-                permuted_stats.append(DETT_test_stat(data_train,permuted_test_data,X_ker,Y_ker,weights_test,W1))
-            else:
-                if bool(random.getrandbits(1)):
-                    test_stat_weight_permuted = torch.tensor(permuted_weights_model.predict_proba(permuted_test_data.X)[:,1]).float()
-                    permuted_stats.append(DETT_test_stat(permuted_train_data,permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,W1_permuted))
-                else:
-                    test_stat_weight_permuted_inv = torch.tensor(permuted_weights_model.predict_proba(permuted_test_data.X)[:,1]).float()
-                    permuted_stats.append(DETT_test_stat(permuted_train_data_inv,permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted_inv,W1_permuted_inv))
+            test_stat_weight_permuted = torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float()
+            permuted_stats.append(DETT_test_stat(permuted_models[0],permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,permuted_models[2]))
+
         elif test_stat == "Diff":
             train_permutation = binned_permutation(binned_weights_train)
             permuted_train_data_diff = data_test.return_permuted_data(train_permutation)
