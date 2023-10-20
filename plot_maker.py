@@ -28,22 +28,22 @@ if __name__ == "__main__":
     if "significance_level" in cfg["experiment"]:
         results_dict["result"] = [int(p_val <0.05) for p_val in results_dict["p_val"]]
         results_df = pd.DataFrame(results_dict)
-        # confidence_interval_dict = {}
-        # for model in results_df["test_stat"]:
-        #     confidence_interval_dict[model] = {}
-        #     confidence_interval_dict[model]["result"] = sum(results_df[results_df["test_stat"] == model]["result"])/len(results_df[results_df["test_stat"] == model]["result"])
-        #     confidence_interval_dict[model]["CI"] = get_confidence_interval(confidence_interval_dict[model]["result"],cfg["experiment"]["n_iter"])
-        # with open("ci.metrics", 'w') as f:
-        #     yaml.dump(confidence_interval_dict, f)
-        #     logging.info(f"\n Dumped scores at {direct_path}")
-        results_df = pd.DataFrame(results_dict)
-        if cfg["moving_param"]["beta_scalar"]:
-            moving_param = "beta_scalar"
-        if cfg["moving_param"]["n_train_sample"]:
-            moving_param = "n_sample"
-        plot = sns.lineplot(data = results_df,x=moving_param,y="result",hue = "test_stat")
-        fig = plot.get_figure()
-        fig.savefig("results_plot")
+        confidence_interval_dict = {}
+        for model in results_df["test_stat"]:
+            confidence_interval_dict[model] = {}
+            confidence_interval_dict[model]["result"] = sum(results_df[results_df["test_stat"] == model]["result"])/len(results_df[results_df["test_stat"] == model]["result"])
+            confidence_interval_dict[model]["CI"] = get_confidence_interval(confidence_interval_dict[model]["result"],cfg["experiment"]["n_iter"])
+        with open("ci.metrics", 'w') as f:
+            yaml.dump(confidence_interval_dict, f)
+            logging.info(f"\n Dumped scores at {direct_path}")
+        # results_df = pd.DataFrame(results_dict)
+        # if cfg["moving_param"]["beta_scalar"]:
+        #     moving_param = "beta_scalar"
+        # if cfg["moving_param"]["n_train_sample"]:
+        #     moving_param = "n_sample"
+        # plot = sns.lineplot(data = results_df,x=moving_param,y="result",hue = "test_stat")
+        # fig = plot.get_figure()
+        # fig.savefig("results_plot")
     
     else:  
         # new_sample_list = []

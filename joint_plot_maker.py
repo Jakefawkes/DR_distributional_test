@@ -71,7 +71,7 @@ for i in range(3):
 for i in range(1,3):
     axes[i].legend([],[], frameon=False)
 fig.savefig("/vols/ziz/fawkes/DR_distributional_test/sandbox/experiments_for_paper/paper_plot.png",bbox_inches='tight')   
-
+plt.rcParams.update({'font.size': 16})
 fig, axes = plt.subplots(nrows=1,ncols=4,sharey=False,figsize= (25.6,4.8 ))
 fig.subplots_adjust(wspace=0.17, hspace=0)
 fig.suptitle("Assesing fit of Doubly Robust Counterfactual Mean Embeddings on Simulated Data")
@@ -84,7 +84,7 @@ plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_sta
 axes[0].set_ylabel("RKHS distance from True Embedddings")
 axes[0].set_xlabel("Number of Samples")
 
-axes[0].set_title("(a) Distributional average treatment effect embeddings, \n Both sided overlap,\n Incorrectly specified propensity",y=-0.36)
+axes[0].set_title("(a) DATE embeddings, \n Both sided overlap,\n Incorrectly specified propensity",y=-0.36,fontsize=15)
 
 with open("/vols/ziz/fawkes/DR_distributional_test/sandbox/fit_tests/10-08-17:17:09/scores.metrics", "r") as f:
     results_dict = yaml.safe_load(f)
@@ -93,7 +93,7 @@ results_df = pd.DataFrame(results_dict)
 plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_stat", ax=axes[1])
 axes[1].set_ylabel("")
 axes[1].set_xlabel("Number of Samples")
-axes[1].set_title("(b) Distributional effect of treatment on the treated embeddings, \n Both sided overlap, \n Incorrectly specified propensity",y=-0.36)
+axes[1].set_title("(b) DETT embeddings, \n Both sided overlap, \n Incorrectly specified propensity",y=-0.36,fontsize=15)
 
 with open("/vols/ziz/fawkes/DR_distributional_test/sandbox/fit_tests/10-08-18:19:12/scores.metrics", "r") as f:
     results_dict = yaml.safe_load(f)
@@ -101,19 +101,19 @@ results_dict["test_stat"] = [test_stat_map(test_stat) for test_stat in results_d
 results_df = pd.DataFrame(results_dict)
 plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_stat", ax=axes[2])
 axes[2].set_xlabel("Number of Samples")
-axes[2].set_title("(c) Distributional average treatment effect embeddings, \n One sided overlap,\n Incorrectly specified propensity",y=-0.36)
+axes[2].set_title("(c) DATE embeddings, \n One sided overlap,\n Incorrectly specified propensity",y=-0.36,fontsize=15)
 axes[2].set_ylabel("")
 with open("/vols/ziz/fawkes/DR_distributional_test/sandbox/fit_tests/10-08-20:25:43/scores.metrics", "r") as f:
     results_dict = yaml.safe_load(f)
 results_dict["test_stat"] = [test_stat_map(test_stat) for test_stat in results_dict["test_stat"]] 
 results_df = pd.DataFrame(results_dict)
 plot = sns.lineplot(data = results_df,x="n_sample",y="fit_score",hue = "test_stat", ax=axes[3])
-axes[3].set_title("(d) Distributional effect of treatment on the treated embeddings, \n One sided overlap,\n Incorrectly specified propensity",y=-0.36)
+axes[3].set_title("(d) DETT embeddings, \n One sided overlap,\n Incorrectly specified propensity",y=-0.36,fontsize=15)
 axes[3].set_ylabel("")
 axes[2].set_xlabel("Number of Samples")
 
 for i in range(4):
     handles, labels = axes[i].get_legend_handles_labels()
-    axes[i].legend(handles=handles, labels=labels)
+    axes[i].legend(handles=handles, labels=labels,fontsize=14)
 
 fig.savefig("/vols/ziz/fawkes/DR_distributional_test/sandbox/fit_tests",bbox_inches='tight')   

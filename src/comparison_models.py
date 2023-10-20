@@ -70,7 +70,7 @@ class TMLE_pval(TMLE):
         f = sm.families.family.Binomial()
         y = self.df[self.outcome]
         log = sm.GLM(y, np.column_stack((H1W, H0W)), offset=np.log(probability_to_odds(self.QAW)),
-                     family=f, missing='drop').fit()
+                     family=f, missing='drop',method="nm").fit_regularized(L1_wt=0, alpha=0.1)
         self._epsilon = log.params
         Qstar1 = logistic.cdf(np.log(probability_to_odds(self.QA1W)) + self._epsilon[0] / self.g1W_total)
         Qstar0 = logistic.cdf(np.log(probability_to_odds(self.QA0W)) - self._epsilon[1] / self.g0W_total)
@@ -154,6 +154,14 @@ def tmle_test(test_data):
     tmle.exposure_model(cov_string, print_results=False)
     tmle.outcome_model('T + '+cov_string, print_results=False)
     tmle.fit()
-    return tmle.pval
+    try:
+        result = tmle.pval
+    except:
+        ci = tmle.odds_ratio_ci
+        if (1>tmle.odds_ratio_ci[0] and 1<tmle.odds_ratio_ci[0]):
+            result = np.array([1])
+        else:
+            result = np.array([0])
+    return result
 
 

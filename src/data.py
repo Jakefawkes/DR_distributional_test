@@ -4,6 +4,8 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import os 
+from sklearn.preprocessing import StandardScaler
+
 class Data_object():
 
     def __init__(self,X,Y,T):
@@ -133,12 +135,13 @@ def load_IDHP():
         col.append("x"+str(i))
     data.columns = col
     data = data.astype({"treatment":'float'}, copy=False)
-    data
     X = torch.tensor(data[["x"+str(i) for  i in range(1,26)]].values,dtype=torch.float)
+    IDHP_scalar = StandardScaler().fit(X)
+    X_scaled = torch.tensor(IDHP_scalar.transform(X),dtype=torch.float)
     Y = torch.tensor(data["y_factual"],dtype=torch.float)
     T = torch.tensor(data["treatment"],dtype=torch.float)
     Y_cf = torch.tensor(data["y_cfactual"],dtype=torch.float)
-    return X,Y,T,Y_cf
+    return X_scaled,Y,T,Y_cf
 
 def load_real_data_object(dataset= "IDHP",null_hypothesis = False):
 
@@ -169,11 +172,15 @@ def load_real_data_object(dataset= "IDHP",null_hypothesis = False):
 
 def load_twins():
     data = pd.read_csv("https://raw.githubusercontent.com/shalit-lab/Benchmarks/master/Twins/Final_data_twins.csv")
+    data = data.dropna()
     X = torch.tensor(data.drop(['T', 'y0', 'y1', 'yf', 'y_cf', 'Propensity'],axis='columns').values,dtype=torch.float)
+    twins_scalar = StandardScaler().fit(X)
+    X_scaled = torch.tensor(twins_scalar.transform(X),dtype=torch.float)
+    print("scaled")
     Y = torch.tensor(data["yf"],dtype=torch.float)
     T = torch.tensor(data["T"],dtype=torch.float)
     Y_cf = torch.tensor(data["y_cf"],dtype=torch.float)
-    return X,Y,T,Y_cf
+    return X_scaled,Y,T,Y_cf
 
 def twins_data_object(null_hypothesis = False):
     X,Y,T,Y_cf = load_IDHP()
@@ -198,9 +205,14 @@ def LBIDD_data_object(size = "1k",null_hypothesis = False):
     Y_CF_data = pd.read_csv("data/"+size+"_cf.csv")
     data = Y_data.merge(X_data,on="sample_id")
     data = Y_CF_data.merge(data,on="sample_id")
+    
     X = torch.tensor(data.drop(["sample_id","y0","y1","z","y"],axis='columns').values,dtype=torch.float)
     Y = torch.tensor(data[["y"]].values,dtype=torch.float).squeeze(1)
     T = torch.tensor(data[["z"]].values,dtype=torch.float).squeeze(1)
+
+    LBIDD_scalar = StandardScaler().fit(X)
+    X = torch.tensor(LBIDD_scalar.transform(X),dtype=torch.float)
+    print("scaled")
     if null_hypothesis:
         Y_cf = torch.tensor(data[["y0","y1"]].values,dtype=torch.float)
         rand_mat = torch.rand(Y_cf .shape)
