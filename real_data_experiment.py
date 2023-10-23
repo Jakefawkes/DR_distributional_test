@@ -30,7 +30,7 @@ from src.utils import *
 from src.comparison_models import tmle_test,double_ml_test
 from src.data import LBIDD_data_object,load_real_data_object
     
-weights_model_dict = {"LR": LogisticRegression(), "Adaboost":AdaBoostClassifier(),"Decision_Tree":DecisionTreeClassifier(),"GP":GaussianProcessClassifier(),"MLP":MLPClassifier()}
+weights_model_dict = {"LR": LogisticRegression(max_iter=2000),"MLP":MLPClassifier()}
 kernel_dict = {"RBF" : kernel.RBFKernel}
 comparison_model_dict = {"DML":double_ml_test , "TMLE":tmle_test}
 
@@ -99,7 +99,7 @@ def main(args, cfg,result_dict):
         
         for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
-                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
+                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights,weights_minmax=cfg["experiment"]["weights_tol"])
                 result_dict["test_stat"] += [stat+func]
                 result_dict["p_val"] += [result["p_val"].item()]
                 result_dict["base_stat"] += [result["stat"]]
@@ -159,4 +159,14 @@ if __name__ == "__main__":
     with open(dump_path, 'w') as f:
         yaml.dump(result_dict, f)
     logging.info(f"\n Dumped scores at {direct_path}")
+    
+    result_dict["result"] = [int(p_val <0.05) for p_val in results_dict["p_val"]]
+    results_df = pd.DataFrame(result_dict)
+    confidence_interval_dict = {}
+    for model in results_df["test_stat"]:
+        confidence_interval_dict[model] = {}
+        confidence_interval_dict[model]["result"] = sum(results_df[results_df["test_stat"] == model]["result"])/len(results_df[results_df["test_stat"] == model]["result"])
+        confidence_interval_dict[model]["CI"] = get_confidence_interval(confidence_interval_dict[model]["result"],cfg["experiment"]["n_iter"])
+    with open("ci.metrics", 'w') as f:
+        yaml.dump(confidence_interval_dict, f)
     # Run session

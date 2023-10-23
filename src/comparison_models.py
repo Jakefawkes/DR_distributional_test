@@ -10,6 +10,7 @@ from scipy.stats import logistic, norm
 from zepid.causal.doublyrobust.utils import tmle_unit_unbound
 from zepid.calc import probability_to_odds
 from sklearn.neural_network import MLPClassifier
+import math
 
 def double_ml_test(test_data):
     
@@ -21,7 +22,7 @@ def double_ml_test(test_data):
 
     ml_l_bonus = clone(learner)
 
-    ml_m_bonus = LogisticRegression()
+    ml_m_bonus = LogisticRegression(max_iter=2000)
 
     # ml_m_bonus = clone(learner)
 
@@ -34,7 +35,7 @@ def double_ml_test(test_data):
     obj_dml_plr_bonus.fit()
     return obj_dml_plr_bonus.pval
 
-
+# Code from ZEPID causal package
 class TMLE_pval(TMLE):
     def fit(self):
         """Calculate the effect measures from the predicted exposure probabilities and predicted outcome values using
@@ -54,7 +55,7 @@ class TMLE_pval(TMLE):
             warnings.warn("No missing data model has been specified. All missing outcome data is assumed to be "
                           "missing completely at random. To relax this assumption to outcome data is missing at random"
                           "please use the `missing_model()` function", UserWarning)
-
+        self.df = self.df.dropna()
         # Step 4) Calculating clever covariate (HAW)
         if self._miss_flag and self._fit_missing_model:
             self.g1W_total = self.g1W * self.m1W
@@ -69,8 +70,12 @@ class TMLE_pval(TMLE):
         # Step 5) Estimating TMLE
         f = sm.families.family.Binomial()
         y = self.df[self.outcome]
+        print(np.isnan((np.log(probability_to_odds(self.QAW)).any())))
+        print(np.isnan((H1W).any()))
+        print(np.isnan((H0W).any()))
+        print(np.isnan((np.column_stack((H1W, H0W))).any()))
         log = sm.GLM(y, np.column_stack((H1W, H0W)), offset=np.log(probability_to_odds(self.QAW)),
-                     family=f, missing='drop',method="nm").fit_regularized(L1_wt=0, alpha=0.1)
+                     family=f, missing='drop',method="nm").fit_regularized(L1_wt=0, alpha=10)
         self._epsilon = log.params
         Qstar1 = logistic.cdf(np.log(probability_to_odds(self.QA1W)) + self._epsilon[0] / self.g1W_total)
         Qstar0 = logistic.cdf(np.log(probability_to_odds(self.QA0W)) - self._epsilon[1] / self.g0W_total)
@@ -148,6 +153,7 @@ class TMLE_pval(TMLE):
 
 def tmle_test(test_data):
     df = test_data.pd_df()
+    df = df.dropna()
     X_cols = [col for col in df.columns if col.startswith("X")]
     cov_string = " + ".join(X_cols)
     tmle = TMLE_pval(df, exposure='T', outcome='Y')

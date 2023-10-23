@@ -85,16 +85,17 @@ def main(args, cfg,result_dict):
         
         for stat in cfg["experiment"]["test_stat"]:
             for func in cfg["experiment"]["ker_regress"]:
-                result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
-                result_dict["test_stat"] += [stat+func]
-                result_dict["p_val"] += [result["p_val"].item()]
-                result_dict["base_stat"] += [result["stat"]]
-                result_dict["result"] += [int(result["p_val"].item()<0.05)]
-                if cfg["moving_param"]["beta_scalar"]:
-                    result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
-                if cfg["moving_param"]["n_train_sample"]:
-                    result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
-        
+                for perm_number in cfg["experiment"]["n_train_perm"]:
+                    result = kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,num_train_permutations=perm_number,test_stat=stat,n_bins =n_bins,permute_weights=permute_weights , reg=cme_reg,func = func,KMM_weights = KMM_weights)
+                    result_dict["test_stat"] += [stat+func+str(perm_number)]
+                    result_dict["p_val"] += [result["p_val"].item()]
+                    result_dict["base_stat"] += [result["stat"]]
+                    result_dict["result"] += [int(result["p_val"].item()<0.05)]
+                    if cfg["moving_param"]["beta_scalar"]:
+                        result_dict["beta_scalar"] += [cfg["data"]["arguments"]["beta_scalar"]]
+                    if cfg["moving_param"]["n_train_sample"]:
+                        result_dict["n_sample"] += [cfg["data"]["n_train_sample"]]
+            
         for model in cfg["experiment"]["comparison_model"]:
             result = comparison_model_dict[model](data_full)
             result_dict["test_stat"] += [model]
@@ -175,3 +176,11 @@ if __name__ == "__main__":
         yaml.dump(result_dict, f)
         logging.info(f"\n Dumped scores at {direct_path}")
         # Run session
+    results_df = pd.DataFrame(results_dict)
+    if cfg["moving_param"]["beta_scalar"]:
+        moving_param = "beta_scalar"
+    if cfg["moving_param"]["n_train_sample"]:
+        moving_param = "n_sample"
+    plot = sns.lineplot(data = results_df,x=moving_param,y="result",hue = "test_stat")
+    fig = plot.get_figure()
+    fig.savefig(os.path.join(direct_path,"results_plot"))

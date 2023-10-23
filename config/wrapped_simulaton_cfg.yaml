@@ -9,16 +9,16 @@ moving_param:
   beta_scalar: True
   n_train_sample: False
   n_test_sample: False
-  values : [0,0.4,0.8,1.2,1.6]
+  values : [0,0.05,0.15,0.3,0.4]
 experiment:
 
   n_iter: 100
 
-  test_stat : [DATE,DETT]
+  test_stat : [DATE]
 
-  comparison_model : [DML,TMLE]
+  comparison_model : []
 
-  ker_regress: [cme,zero]
+  ker_regress: [cme]
 
   weights_model : LR
 
@@ -29,6 +29,8 @@ experiment:
   significance_level : 0.05
 
   n_bins: 100
+
+  n_train_perm: [1,5,10]
 
   cme_reg: 0.001
 
@@ -76,6 +78,6 @@ data:
     alpha_vec: [0.1,0.2,0.3,0.4,0.5,0.1,0.2,0.3,0.4]
     beta_vec: [0.5,0.4,0.3,0.2,0.1,0.4,0.3,0.2,0.1]
     beta_scalar: 0
-    effect_var: Unif
+    effect_var: Const
     noise_Y: 0.2
 

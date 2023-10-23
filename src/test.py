@@ -25,7 +25,12 @@ def invert_permutation(permutation):
     inv[permutation] = np.arange(len(inv), dtype=inv.dtype)
     return inv
 
-def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,num_train_permutations=5,reg=[1,1],permute_weights=False,func="cme", KMM_weights = False):
+def weights_tol(weights,weights_minmax):
+    weights[weights < weights_minmax] = weights_minmax
+    weights[weights > 1-weights_minmax] = 1-weights_minmax
+    return weights
+
+def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_stat="DATE",n_bins=10,n_permutations=200,num_train_permutations=1,reg=[1,1],permute_weights=False,func="cme", KMM_weights = False,weights_minmax=10**(-5)):
     
     weights_model_train = clone(weights_model)
     weights_model_test = clone(weights_model)
@@ -33,8 +38,8 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     weights_model_train.fit(data_train.X,data_train.T)
     weights_model_test.fit(data_test.X,data_test.T)
 
-    weights_train = torch.tensor(weights_model_test.predict_proba(data_train.X)[:,1]).float()
-    weights_test = torch.tensor(weights_model_train.predict_proba(data_test.X)[:,1]).float()
+    weights_train = weights_tol(torch.tensor(weights_model_test.predict_proba(data_train.X)[:,1]).float(),weights_minmax)
+    weights_test = weights_tol(torch.tensor(weights_model_train.predict_proba(data_test.X)[:,1]).float(),weights_minmax)
     data_full = data_test.join(data_train)
     weights = torch.concat([weights_train,weights_test])
     
@@ -47,7 +52,7 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     
     weights_model_train.fit(data_train.X,data_train.T)
 
-    weights_test = torch.tensor(weights_model_train.predict_proba(data_test.X)[:,1]).float()
+    weights_test = weights_tol(torch.tensor(weights_model_train.predict_proba(data_test.X)[:,1]).float(),weights_minmax)
 
     if test_stat == "DATE":
         
@@ -72,10 +77,10 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
     binned_weights_test = get_binned_weights(weights_test_perm, n_bins)
 
     if test_stat == "DATE":
-        permuted_model_list = [(data_train,weights_model,W0,W1)]
+        permuted_model_list = [(data_train,weights_model_train,W0,W1)]
     
     elif test_stat == "DETT":
-        permuted_model_list = [(data_train,weights_model,W1)]
+        permuted_model_list = [(data_train,weights_model_train,W1)]
 
     for i in range(num_train_permutations):
         train_permutation = binned_permutation(binned_weights_train)
@@ -108,14 +113,15 @@ def kernel_permutation_test(data_train,data_test,X_ker,Y_ker,weights_model,test_
         test_permutation = binned_permutation(binned_weights_test)
         permuted_test_data = data_test.return_permuted_data(test_permutation)
 
-        sample_index = random.randrange(len(permuted_model_list))
-        permuted_models = permuted_model_list[i]
+        sample_index = random.randrange(len(permuted_model_list)-1)
+
+        permuted_models = permuted_model_list[sample_index]
         if test_stat == "DATE":
-            test_stat_weight_permuted = torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float()
+            test_stat_weight_permuted = weights_tol(torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float(),weights_minmax)
             permuted_stats.append(DATE_test_stat(permuted_models[0],permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,permuted_models[2],permuted_models[3]))
 
         elif test_stat == "DETT":
-            test_stat_weight_permuted = torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float()
+            test_stat_weight_permuted = weights_tol(torch.tensor(permuted_models[1].predict_proba(permuted_test_data.X)[:,1]).float(),weights_minmax)
             permuted_stats.append(DETT_test_stat(permuted_models[0],permuted_test_data,X_ker,Y_ker,test_stat_weight_permuted,permuted_models[2]))
 
         elif test_stat == "Diff":
