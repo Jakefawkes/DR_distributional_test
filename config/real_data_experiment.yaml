@@ -1,0 +1,44 @@
+################################################################################
+#   CONFIGURATIONS FOR SIMULATED DATA MODEL
+# Run python real_data_experiment.py --cfg=config/real_data_experiment.yaml --o=sandbox/real_data
+################################################################################
+
+# Experiment
+
+experiment:
+  n_iter: 100
+
+  test_stat : [DATE,DETT]
+
+  comparison_model : [DML]
+
+  ker_regress: [cme,zero]
+
+  weights_model : LR
+
+  X_ker: RBF
+
+  Y_ker: RBF
+
+  significance_level : 0.05
+
+  n_bins: 200
+
+  num_train_permutations: 5
+
+  cme_reg: 0.01
+
+  permute_weights: True
+  
+  KMM_weights: False
+  
+  dataset : "LBIDD"  
+
+  null_hypothesis : False
+
+  LBIDD_size: 2.5k
+
+  weights_tol: 0.01
+
+
+

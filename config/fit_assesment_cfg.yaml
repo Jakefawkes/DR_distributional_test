@@ -1,0 +1,74 @@
+################################################################################
+#   CONFIGURATIONS FOR SIMULATED DATA MODEL
+# Run python fit_assesment_experiment.py --cfg=config/fit_assesment_cfg.yaml --o=sandbox/fit_assements
+################################################################################
+
+# Experiment
+
+moving_param:
+  beta_scalar: False
+  n_train_sample: True
+  n_test_sample: True
+  values : [500,1000,2000,4000]
+
+experiment:
+  n_iter: 30
+
+  test_stat : [DATE]
+
+  ker_regress: [zero,cme]
+
+  weights_model : [LR]
+
+  X_ker: RBF
+
+  Y_ker: RBF
+
+  n_cf_sample: 10000
+
+  cme_reg: 0.01
+  
+  KMM_weights: [False]
+
+# DATASET
+data:
+  # Name of the generator
+  # generator: shift_data_simulation
+  
+  # dx: 7
+  
+  # dy: 1
+
+  # n_train_sample: 500
+
+  # n_test_sample: 500
+
+  # arguments: 
+  #   mu: [0,0,0,0,0,0,0]
+  #   sigma: [C_ID,1.3]
+  #   noise: 0
+  
+  # functions:
+  #   g_0: f_4
+  #   g_1: f_8
+  
+  generator: linear_data_simulation
+
+  n_train_sample: 1000
+
+  n_test_sample: 1000
+  
+  dx: 9
+  
+  dy: 1
+  arguments: 
+    alpha_vec: [0.1,0.2,0.3,0.4,0.5,0.1,0.2,0.3,0.4]
+    beta_vec: [0.1,0.2,0.3,0.4,0.5,0.1,0.2,0.3,0.4]
+    # alpha_vec: [0]
+    # beta_vec: [0]
+    beta_scalar: 3
+    effect_var: Const
+    noise_Y: 0
+    squared: False
+
+  # generator: trivial

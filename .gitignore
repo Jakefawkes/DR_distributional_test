@@ -1,8 +1,7 @@
 sandbox
 DR_env
 job_runner.sh
-config
-config/wrapped_simulaton_cfg.yaml
-config/wrapped_simulaton_cfg.yaml
+plot_maker.sh
+
 .gitignore
 data

@@ -1,6 +1,6 @@
 ################################################################################
-#   CONFIGURATIONS FOR SIMULATED DATA MODEL
-# Run python wrapped_simulated_experiment.py --cfg=/Users/jakefawkes/Python/DR_distributional_test/config/wrapped_simulaton_cfg.yaml --o=sandbox/
+#   Wrapped simulation experiment config
+# Run python wrapped_simulated_experiment.py --cfg=config/wrapped_simulaton_cfg.yaml --o=sandbox/
 ################################################################################
 
 # Experiment
@@ -16,9 +16,9 @@ experiment:
 
   test_stat : [DATE]
 
-  comparison_model : []
+  comparison_model : [DATE,DETT]
 
-  ker_regress: [cme]
+  ker_regress: [cme,zero]
 
   weights_model : LR
 
