@@ -1,5 +1,5 @@
 """
-Description : Runs kernel ridge regression model with linear data generating process
+Description : Runs the simulated experiments from the paper. Can either vary the number of samples or the degree of distributional effect.
 
 Usage: wrapped_simulated_experiment.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
@@ -30,6 +30,7 @@ from src.utils import *
 from src.comparison_models import tmle_test,double_ml_test
 import random
 import math
+
 def update_cfg(cfg, value):
     if cfg["moving_param"]["beta_scalar"]:
         cfg["data"]["arguments"]["beta_scalar"] = value
